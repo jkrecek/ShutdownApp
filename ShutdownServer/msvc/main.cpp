@@ -34,7 +34,6 @@ std::vector<std::string> split(const std::string &s, char delim) {
 }
 
 const char* handleMessage(std::string message) {
-	cout << "Handling: " << message;
 	if (message == "TURN_OFF") {
 		system(COMMAND_TURN_OFF);
 		return "OK";
@@ -59,53 +58,54 @@ bool sendMessage(SOCKET client, const char* message) {
 	size_t size;
 	if ((size = send(client, message, strlen(message), 0)) == SOCKET_ERROR)
 	{
-		cerr << "Problém s odesláním dat" << endl;
+		cerr << "Could not send data" << endl;
 		WSACleanup();
 		return false;
 	}
-	cout << "Odesláno: " << size << endl;
+
 	return true;
 }
 
-int main(int argc, char *argv[]) { 
-	WORD wVersionRequested = MAKEWORD(1, 1); // Èíslo verze
-	WSADATA data;           // Struktura s info. o knihovnì;    
-	std::string text;       // Pøijímaný text
-	sockaddr_in sockname;   // "Jméno" soketu a èíslo portu
-	sockaddr_in clientInfo; // Klient, který se pøipojil 
-	SOCKET mainSocket;      // Soket
-	char buf[BUFSIZE];      // Pøijímací buffer
-	size_t size;            // Poèet pøijatých a odeslaných bytù
-	int addrlen;            // Velikost adresy vzdáleného poèítaèe
-	int count = 0;          // Poèet pøipojení
+int main(int argc, char *argv[]) {
+	WORD wVersionRequested = MAKEWORD(1, 1);
+	WSADATA data;
+	std::string text;
+	sockaddr_in sockname;
+	sockaddr_in clientInfo;
+	SOCKET mainSocket;
+	char buf[BUFSIZE];
+	size_t size;
+	int addrlen;
+	int count = 0;
 	int port = 3691;
 
 	if (WSAStartup(wVersionRequested, &data) != 0)
 	{
-		cout << "Nepodaøilo se inicializovat sokety" << endl;
+		cout << "E: Couldn't initialize sockets." << endl;
 		return -1;
 	}
 
 	if ((mainSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET)
 	{
-		cerr << "Nelze vytvoøit soket" << endl;
+		cerr << "E: Couldn't create socket." << endl;
 		WSACleanup();
 		return -1;
 	}
+
 	sockname.sin_family = AF_INET;
 	sockname.sin_port = htons(port);
 	sockname.sin_addr.s_addr = INADDR_ANY;
 
 	if (bind(mainSocket, (sockaddr *)&sockname, sizeof(sockname)) == SOCKET_ERROR)
 	{
-		cerr << "Problém s pojmenováním soketu." << endl;
+		cerr << "E: Couldn't name socket." << endl;
 		WSACleanup();
 		return -1;
 	}
 
 	if (listen(mainSocket, 10) == SOCKET_ERROR)
 	{
-		cerr << "Problém s vytvoøením fronty" << endl;
+		cerr << "E: Couldn't create listining queue." << endl;
 		WSACleanup();
 		return -1;
 	}
@@ -118,35 +118,39 @@ int main(int argc, char *argv[]) {
 		int totalSize = 0;
 		if (client == INVALID_SOCKET)
 		{
-			cerr << "Problém s pøijetím spojeni" << endl;
+			cerr << "E: Couldn't accept connection." << endl;
 			WSACleanup();
 			return -1;
 		}
 
-		cout << "Nìkdo se pøipojil z adresy: " << inet_ntoa((in_addr)clientInfo.sin_addr) << endl;
 
-		text = "";
-		
+		std::string text;
 		do {
-			cout << "Reading" << endl;
 			size = recv(client, buf, BUFSIZE - 1, 0);
 			if (size > 0) {
-				text.append(buf, size);
-			}
-		} while (size >= (BUFSIZE - 1));
+				char *start = buf;
+				char *end = NULL;
+				while (end = (char*)memchr(start, '\n', size))
+				{
+					text.append(start, end - start);
+					const char* response = handleMessage(text);
+					if (response) {
+						sendMessage(client, response);
+					}
 
-		std::vector<std::string> messages = split(text, '\n');
-		for (std::vector<std::string>::iterator itr = messages.begin(); itr != messages.end(); ++itr) {
-			std::string message = *itr;
-			const char* response = handleMessage(message);
-			if (response) {
-				sendMessage(client, response);
+					text.clear();
+					size -= end - start;
+					start = end + 1;
+				}
+
+				if (size > 0)
+					text.append(start, size);
 			}
-		}
+		} while (text.empty());
 
 		closesocket(client);
 	} while (++count != 3);
-	cout << "Konèím" << endl;
+	cout << "Ending" << endl;
 	closesocket(mainSocket);
 	WSACleanup();
 	return 0;
