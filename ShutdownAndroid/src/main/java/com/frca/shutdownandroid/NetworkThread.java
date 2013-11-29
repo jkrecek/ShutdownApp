@@ -1,5 +1,6 @@
 package com.frca.shutdownandroid;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -64,8 +65,11 @@ public class NetworkThread extends Thread implements Runnable  {
                     if (input.ready()) {
                         String line;
                         while ((line = input.readLine()) != null) {
-                            Log.i(getClass().getSimpleName(), "Read: " + line);
-                            mMessageListener.messageReceived(line);
+                            line = line.trim();
+                            if (!TextUtils.isEmpty(line)) {
+                                Log.i(getClass().getSimpleName(), "Read: " + line);
+                                mMessageListener.messageReceived(line);
+                            }
                         }
 
                         destroySocket();
