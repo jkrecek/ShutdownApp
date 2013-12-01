@@ -20,121 +20,94 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Created by KillerFrca on 28.11.13.
  */
-public class NetworkThread extends Thread implements Runnable  {
+public class NetworkThread /*extends Thread implements Runnable */ {
 
-    private String serverMessage;
-    public static final String SERVERIP = "10.0.0.44";
-    public static final int SERVERPORT = 3691;
-    private static final int TIMEOUT = 5000;
-    private OnMessageReceived mMessageListener = null;
-    private OnExceptionReceived mExceptionReceived = null;
+    public static final int SERVER_PORT = 3691;
+    public static final int TIMEOUT = 5000;
+
+    public static final Pattern MAC_ADDRESS = Pattern.compile("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$");
+
+    private OnMessageReceived defaultMessageListener;
+    private OnExceptionReceived defaultExceptionReceived;
     private Socket socket;
     private BufferedReader input;
     private DataOutputStream output;
 
-    private long lastTimeSocketUsed;
-
-    private List<String> commands = Collections.synchronizedList(new ArrayList<String>());
+    private String ip;
 
     public NetworkThread(OnMessageReceived messageListener, OnExceptionReceived exceptionReceived) {
-        mMessageListener = messageListener;
-        mExceptionReceived = exceptionReceived;
-
+        defaultMessageListener = messageListener;
+        defaultExceptionReceived = exceptionReceived;
     }
 
-    public void sendMessage(String message){
-        synchronized (commands) {
-            commands.add(message);
-        }
-
-        if (!isAlive())
-            start();
+    public Command sendMessage(String message) {
+        return sendMessage(message, defaultMessageListener);
     }
 
-    @Override
-    public void run() {
-        while(true) {
-            try {
-                if (socket != null) {
-                    input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-                    if (input.ready()) {
-                        String line;
-                        while ((line = input.readLine()) != null) {
-                            line = line.trim();
-                            if (!TextUtils.isEmpty(line)) {
-                                Log.i(getClass().getSimpleName(), "Read: " + line);
-                                mMessageListener.messageReceived(line);
-                            }
-                        }
-
-                        destroySocket();
-                        lastTimeSocketUsed = System.currentTimeMillis();
-                    }
-                }
-
-                synchronized (commands) {
-                    if (!commands.isEmpty()) {
-                        if (socket == null)
-                            createSocket();
-
-                        output = new DataOutputStream(socket.getOutputStream());
-
-                        for (Iterator<String> itr = commands.iterator(); itr.hasNext(); ) {
-                            String command = itr.next();
-                            Log.i(getClass().getSimpleName(), "Send: " + command);
-                            output.writeBytes(command + '\n');
-                            output.flush();
-                            itr.remove();
-                        }
-
-                        lastTimeSocketUsed = System.currentTimeMillis();
-                    }
-                }
-
-                if ((System.currentTimeMillis() - lastTimeSocketUsed) > 60000)
-                    destroySocket();
-
-                sleep(500);
-
-            } catch (Exception e) {
-                mExceptionReceived.exceptionReceived(e);
-                commands.clear();
-
-                try {
-                    destroySocket();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-
-            }
-        }
-
+    public Command sendMessage(String message, OnMessageReceived messageReceived) {
+        return sendMessage(message, messageReceived, defaultExceptionReceived);
     }
 
-    private void createSocket() throws IOException {
-        Log.i(getClass().getName(), "Sock: Connecting");
+    public Command sendMessage(String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
+        Command command = new Command(message, messageReceived, exceptionReceived);
+        NetworkTask.start(ip, command);
+        return command;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public static Socket createSocket(String ipAddress) throws IOException {
+        Log.i("Network", "Sock: Connecting");
 
         long cur = System.currentTimeMillis();
-        socket = new Socket();
-        socket.connect(new InetSocketAddress(SERVERIP, SERVERPORT), TIMEOUT);
-        socket.setSoTimeout(TIMEOUT);
+        Socket socket = new Socket();
+        if (TextUtils.isEmpty(ipAddress))
+            throw new IOException("No Ip Address!");
 
-        Log.i(getClass().getName(), "M: Connected in " + String.valueOf(System.currentTimeMillis() - cur) + " milis.");
-        lastTimeSocketUsed = System.currentTimeMillis();
+        socket.connect(new InetSocketAddress(ipAddress, NetworkThread.SERVER_PORT), NetworkThread.TIMEOUT);
+        socket.setSoTimeout(NetworkThread.TIMEOUT);
+
+        Log.i("Network", "M: Connected in " + String.valueOf(System.currentTimeMillis() - cur) + " milis.");
+        return socket;
     }
 
-    private void destroySocket() throws IOException {
+    public static Socket destroySocket(Socket socket) throws IOException {
         if (socket != null) {
             socket.close();
             socket = null;
-            Log.i(getClass().getSimpleName(), "Sock: Destroyed");
+            Log.i("Network", "Sock: Destroyed");
         }
 
+        return socket;
+    }
+
+    public void pingConnection(Connection connection, final Connection.PingResult resultCallback) {
+        sendMessage("GET_MAC " + connection.getIp(), new OnMessageReceived() {
+            @Override
+            public void messageReceived(String responseMAC) {
+                boolean success = true;
+                if (!NetworkThread.MAC_ADDRESS.matcher(responseMAC).matches())
+                    success = false;
+
+                resultCallback.result(success);
+            }
+        }, new OnExceptionReceived() {
+            @Override
+            public void exceptionReceived(Exception e) {
+                resultCallback.result(false);
+            }
+        });
     }
 
     public interface OnMessageReceived {
@@ -143,5 +116,30 @@ public class NetworkThread extends Thread implements Runnable  {
 
     public interface OnExceptionReceived {
         public void exceptionReceived(Exception e);
+    }
+
+    public static class Command {
+        private String command;
+
+        private OnMessageReceived messageReceived = null;
+        private OnExceptionReceived exceptionReceived = null;
+
+        private Command(String command, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
+            this.command = command;
+            this.messageReceived = messageReceived;
+            this.exceptionReceived = exceptionReceived;
+        }
+
+        public String getCommand() {
+            return command;
+        }
+
+        public OnMessageReceived getMessageReceived() {
+            return messageReceived;
+        }
+
+        public OnExceptionReceived getExceptionReceived() {
+            return exceptionReceived;
+        }
     }
 }

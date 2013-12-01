@@ -5,4 +5,25 @@
         <!-- Customize your theme here. -->
     </style>
 
+    <style name="ResponsiveLayoutRoot">
+        <item name="android:orientation">vertical</item>
+
+    </style>
+
+    <style name="ResponsiveLayoutParent">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginBottom">15dp</item>
+
+    </style>
+
+    <style name="ResponsiveLayoutChild">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
 </resources>

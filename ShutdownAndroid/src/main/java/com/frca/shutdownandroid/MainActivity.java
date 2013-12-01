@@ -1,96 +1,247 @@
 package com.frca.shutdownandroid;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.Display;
-import android.view.LayoutInflater;
+import android.os.Handler;
+import android.text.TextUtils;
+import android.util.Log;
+import android.util.Patterns;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.os.Build;
-import android.widget.ImageView;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
-import org.apache.http.util.ExceptionUtils;
+import com.frca.shutdownandroid.fragments.MainFragment;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements ActionBar.OnNavigationListener {
 
+    private static final String KEY_CONNECTIONS = "connections";
     private NetworkThread thread;
+
+    private List<Connection> connections = new ArrayList<Connection>();
+
+    public static Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        LinearLayout layout = (LinearLayout) getLayoutInflater().inflate(R.layout.activity_main, null);
-        Display display = getWindowManager().getDefaultDisplay();
-        int width = display.getWidth();
-        int height = display.getHeight();
-        LinearLayout.LayoutParams params;
-        //LinearLayout.LayoutParams childParams;
-        //int childOrientation;
-        if (width > height) {
-            layout.setOrientation(LinearLayout.HORIZONTAL);
-            //childOrientation = LinearLayout.HORIZONTAL;
-            params = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1);
-            //childParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1);
-        } else {
-            layout.setOrientation(LinearLayout.VERTICAL);
+        setContentView(R.layout.activity_main);
 
-            //childOrientation = LinearLayout.VERTICAL;
-            params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1);
-            //childParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1);
+        loadConnections();
 
+        if (connections.isEmpty())
+            getActionBar().setTitle("Add connection");
+        else
+            displayAdapter(false);
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        context = this;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_add: {
+                EditText editText = getActionBarEditText();
+                if (editText == null)
+                    displayEditText();
+                else
+                    onEditTextConfirm(editText);
+                return true;
+            }
         }
-        for (int i = 0; i < layout.getChildCount(); ++i) {
-            LinearLayout child = (LinearLayout) layout.getChildAt(i);
-            child.setLayoutParams(params);
-            /*child.setOrientation(childOrientation);
-            for (int a = 0; a < child.getChildCount(); ++a) {
-                View image = child.getChildAt(a);
-                if (image instanceof ImageView) {
-                    image.setLayoutParams(childParams);
-                    break;
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void displayAdapter(boolean isUpdate) {
+        final ActionBar actionBar = getActionBar();
+        actionBar.setCustomView(null);
+        Connection[] conns = connections.toArray(new Connection[connections.size()]);
+        ConnectionArrayAdapter adapter = new ConnectionArrayAdapter(this, conns);
+        actionBar.setListNavigationCallbacks(adapter, this);
+        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME);
+        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+
+        if (isUpdate)
+            saveConnections();
+    }
+
+    private void displayEditText() {
+        final ActionBar actionBar = getActionBar();
+
+        actionBar.setCustomView(R.layout.edit_text);
+        final EditText edit = (EditText) actionBar.getCustomView().findViewById(R.id.edit);
+        edit.setHint("Ip Address (e.g. 192.168.0.30)");
+        edit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                onEditTextConfirm((EditText) v);
+                return false;
+            }
+        });
+
+        edit.requestFocus();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                imm.showSoftInput(edit, InputMethodManager.SHOW_IMPLICIT);
+            }
+        }, 200);
+
+
+        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_CUSTOM);
+    }
+
+    private EditText getActionBarEditText() {
+        View view = getActionBar().getCustomView();
+        if (view != null) {
+            view = view.findViewById(R.id.edit);
+            if (view != null && view instanceof EditText)
+                return (EditText) view;
+        }
+
+        return null;
+    }
+
+    private void onEditTextConfirm(EditText editText) {
+        final String inputIp = editText.getText().toString();
+        if (TextUtils.isEmpty(inputIp)) {
+            editText.setError("Enter new IP Address");
+            return;
+        }
+
+        if (inputIp.length() < 7 && inputIp.length() > 15) {
+            editText.setError("Wrong length");
+            return;
+        }
+
+        int count = 0;
+        for (int i=0; i < inputIp.length(); i++)
+            if (inputIp.charAt(i) == '.')
+                ++count;
+
+        if (count != 3) {
+            editText.setError("Wrong format");
+            return;
+        }
+
+        if (!Patterns.IP_ADDRESS.matcher(inputIp).matches()) {
+            editText.setError("Wrong format");
+            return;
+        }
+
+        for (Connection con : connections) {
+            if (con.getIp() == inputIp) {
+                editText.setError("Connection with such IP already exists.");
+                return;
+            }
+        }
+
+        InputMethodManager im = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+        im.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+
+        NetworkThread nt = getThread();
+        nt.setIp(inputIp);
+        nt.sendMessage("GET_MAC " + inputIp, new NetworkThread.OnMessageReceived() {
+            @Override
+            public void messageReceived(String responseMAC) {
+                if (responseMAC.length() != 17) {
+                    showDialog("Error", "Unexpected length of response");
+                    return;
                 }
-            }*/
 
-            child.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    String str = null;
-                    switch (view.getId()) {
-                        case R.id.turn_off: str = "TURN_OFF"; break;
-                        case R.id.restart:  str = "RESTART"; break;
-                        case R.id.lock:     str = "LOCK"; break;
-                        case R.id.sleep:    str = "SLEEP"; break;
+                if (!NetworkThread.MAC_ADDRESS.matcher(responseMAC).matches()) {
+                    showDialog("Error", "Unexpected format of response");
+                    return;
+                }
+
+                Connection connection = null;
+                for (Connection con : connections) {
+                    if (con.getIp() == inputIp) {
+                        connection = con;
+                        break;
                     }
+                }
 
-                    if (str == null)
-                        Toast.makeText(MainActivity.this, "No action specified for view id `" + String.valueOf(view.getId()) + "`", Toast.LENGTH_LONG).show();
-                    else
-                        getThread().sendMessage(str);
+                if (connection != null) {
+                    connection.setMac(responseMAC);
+                } else {
+                    connections.add(new Connection(inputIp, responseMAC));
+                }
+
+                displayAdapter(true);
+            }
+        }, new NetworkThread.OnExceptionReceived() {
+                @Override
+                public void exceptionReceived(Exception e) {
+                    showDialog("Error", getStackTrace(e));
                 }
             });
-        }
-
-        layout.setOrientation(width > height ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL);
-        setContentView(layout);
     }
 
     public NetworkThread getThread() {
         if (thread == null)
-            thread = new NetworkThread(messageReceiver, exceptionReceiver);
+            thread = new NetworkThread(defaultMessageReceiver, defaultExceptionReceiver);
 
         return thread;
+    }
+
+    private void loadConnections() {
+        connections.clear();
+        Set<String> conn_set = getPreferences(MODE_PRIVATE).getStringSet(KEY_CONNECTIONS, null);
+        if (conn_set == null)
+            return;
+
+        for (String s : conn_set) {
+            String parts[] = s.split("\n");
+            connections.add(new Connection(parts[0], parts[1]));
+        }
+    }
+
+    private void saveConnections() {
+        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        Set<String> conn_set = new HashSet<String>();
+        for (Connection con : connections)
+            conn_set.add(con.getIp() + "\n" + con.getMac());
+
+        prefs.edit().putStringSet(KEY_CONNECTIONS, conn_set).commit();
     }
 
     private TextView getChildText(LinearLayout parent) {
@@ -103,18 +254,18 @@ public class MainActivity extends Activity {
         return null;
     }
 
-    private NetworkThread.OnMessageReceived messageReceiver = new NetworkThread.OnMessageReceived() {
+    private NetworkThread.OnMessageReceived defaultMessageReceiver = new NetworkThread.OnMessageReceived() {
         @Override
         public void messageReceived(String message) {
             showDialog("Response", message );
         }
     };
 
-    private NetworkThread.OnExceptionReceived exceptionReceiver = new NetworkThread.OnExceptionReceived() {
+    private NetworkThread.OnExceptionReceived defaultExceptionReceiver = new NetworkThread.OnExceptionReceived() {
         @Override
         public void exceptionReceived(Exception e) {
             if (e instanceof SocketTimeoutException) {
-                showDialog("Connection error", "App could not connect to host `" + NetworkThread.SERVERIP + "`, port `" + NetworkThread.SERVERPORT + "`" );
+                showDialog("Connection error", "App could not connect to host `" + getThread().getIp() + "`, port `" + NetworkThread.SERVER_PORT + "`" );
                 e.printStackTrace();
                 return;
             }
@@ -147,4 +298,14 @@ public class MainActivity extends Activity {
         return sw.toString();
     }
 
+    @Override
+    public boolean onNavigationItemSelected(int i, long l) {
+        getFragmentManager()
+            .beginTransaction()
+            .replace(R.id.container, new MainFragment(connections.get(i)))
+            .addToBackStack(null)
+            .commit();
+
+        return false;
+    }
 }
