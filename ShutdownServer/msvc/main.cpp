@@ -226,7 +226,7 @@ std::vector<std::string> split(const std::string &s, char delim)
 	return elems;
 }
 
-const char* getMAC(IpAddress clientIp = NULL, IpAddress serverIp = NULL)
+const char* getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NULL)
 {
 	IP_ADAPTER_INFO* adapterInfo;
 	DWORD dwBufLen = sizeof(adapterInfo);
@@ -258,7 +258,7 @@ const char* getMAC(IpAddress clientIp = NULL, IpAddress serverIp = NULL)
 			if (ipAddress == NULL)
 				continue;
 
-			if (serverIp != NULL)
+			if (serverIp)
 			{
 				if (ipAddress == serverIp)
 				{
@@ -270,9 +270,9 @@ const char* getMAC(IpAddress clientIp = NULL, IpAddress serverIp = NULL)
 			{
 				if (candidate)
 				{
-					if (clientIp != NULL)
+					if (clientIp)
 					{
-						if (clientIp.isSameDomain(ipAddress))
+						if (clientIp->isSameDomain(ipAddress))
 						{
 							candidate = pAdapterInfo;
 							break;
@@ -281,8 +281,8 @@ const char* getMAC(IpAddress clientIp = NULL, IpAddress serverIp = NULL)
 				}
 				else
 				{
-					candidate = pAdapterInfo;
-					if (clientIp == NULL)
+ 					candidate = pAdapterInfo;
+					if (!clientIp)
 						break;
 				}
 			}
@@ -334,7 +334,14 @@ const char* handleMessage(std::string message, sockaddr_in clientInfo)
 	{
 		IpAddress serverIp = rest ? IpAddress(rest) : NULL;
 		IpAddress clientIp = inet_ntoa((in_addr)clientInfo.sin_addr);
-		return getMAC(clientIp, serverIp);
+		const char * mac = getMAC(&clientIp, &serverIp);
+		if (mac == "") {
+			mac = getMAC(NULL, NULL);
+			if (mac == "")
+				mac = "ERROR";
+		}
+
+		return mac;
 	}
 
 	return NULL;
