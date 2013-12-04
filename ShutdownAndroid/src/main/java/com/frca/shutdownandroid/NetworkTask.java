@@ -50,9 +50,13 @@ public class NetworkTask extends Thread implements Runnable {
                 if (input.ready()) {
                     String line;
                     while ((line = input.readLine()) != null) {
-                        final String response = line.trim();
-                        if (!TextUtils.isEmpty(line)) {
-                            Log.i(getClass().getSimpleName(), "Read: " + line);
+                        if (line.equals("CLOSE")) {
+                            Log.i(getClass().getSimpleName(), "Closing socket");
+                            break;
+                        }
+                        final String response = getReceivedString(line);
+                        if (response != null) {
+                            Log.i(getClass().getSimpleName(), "Read: " + response);
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -61,7 +65,6 @@ public class NetworkTask extends Thread implements Runnable {
                             });
                         }
                     }
-                    break;
                 }
 
                 try {
@@ -84,6 +87,18 @@ public class NetworkTask extends Thread implements Runnable {
                 e.printStackTrace();
             }
         }
+    }
+
+    private String getReceivedString(String string) {
+        if (TextUtils.isEmpty(string))
+            return null;
+
+        string = string.trim();
+        if (TextUtils.isEmpty(string))
+            return null;
+
+        string = string.replaceAll("\\\\n", "\n");
+        return string;
     }
 
     private void runOnUiThread(Runnable run) {
