@@ -6,6 +6,8 @@
 #include <windows.h>
 #include <iostream>
 #include "helper.h"
+#include "urlhandler.h"
+#include <algorithm>
 
 #define BUFFER_SIZE 1000
 
@@ -52,6 +54,8 @@ void Connection::process(const char* message)
     char* rest = NULL;
     std::string command = strtok_s((char*)message, " ", &rest);
 
+    std::cout << "Inc command: " << command << std::endl;
+
     Command controlCommand;
     if ((controlCommand = core->getServerControl()->getCommand(command)) != NONE)
     {
@@ -70,7 +74,17 @@ void Connection::process(const char* message)
                 mac = "ERROR";
         }
 
+        std::cout << mac << std::endl;
         responseClose(mac);
+        return;
+    }
+
+    if (command == "TORRENT")
+    {
+        URLHandler handler;
+        std::string response = handler.loadUrl("http://eztv.it");
+        responseClose(response.substr(0,50).c_str());
+
         return;
     }
 }
@@ -78,6 +92,7 @@ void Connection::process(const char* message)
 void Connection::respond(const char *message)
 {
     size_t size;
+    message = safeResponseFromat(message);
     if ((size = send(socket, message, strlen(message), 0)) == SOCKET_ERROR)
     {
         std::cerr << "Could not send data" << std::endl;
@@ -92,5 +107,25 @@ void Connection::responseClose(const char *message)
 
 void Connection::close()
 {
+    const char* closeStr = "CLOSE\n";
+    send(socket, closeStr, strlen(closeStr), 0);
     closesocket(socket);
 }
+
+const char *Connection::safeResponseFromat(const char *message)
+{
+    std::string str = message;
+    size_t start_pos = 0;
+    const char* from = "\n";
+    const char* to = "\\n";
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, strlen(from), to);
+        start_pos += strlen(to); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
+    //int idx = str.find("x");
+    //str.replace(idx, 1, "y");
+
+    str += "\n";
+    return str.c_str();
+}
+

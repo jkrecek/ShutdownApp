@@ -81,8 +81,8 @@ const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NUL
         PIP_ADAPTER_INFO candidate = NULL;
 
         do {
-            IpAddress ipAddress(pAdapterInfo->IpAddressList.IpAddress.String);
-            if (ipAddress == NULL)
+            IpAddress ipAddress = pAdapterInfo->IpAddressList.IpAddress.String;
+            if (ipAddress.isNull())
                 continue;
 
             if (serverIp)

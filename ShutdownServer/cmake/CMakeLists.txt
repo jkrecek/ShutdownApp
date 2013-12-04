@@ -1,5 +1,4 @@
 project(cmake)
 cmake_minimum_required(VERSION 2.8)
-aux_source_directory(. SRC_LIST)
-add_executable("ShutdownServer" ${SRC_LIST})
-TARGET_LINK_LIBRARIES("ShutdownServer" ws2_32 iphlpapi)
+add_subdirectory(include)
+add_subdirectory(src)

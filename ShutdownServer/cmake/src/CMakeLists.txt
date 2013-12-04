@@ -1,0 +1,5 @@
+aux_source_directory(. SRC_LIST)
+add_executable("ShutdownServer" ${SRC_LIST})
+set(LIB_DIR ${PROJECT_SOURCE_DIR}/lib)
+include_directories(${PROJECT_SOURCE_DIR}/include)
+target_link_libraries("ShutdownServer" ws2_32 iphlpapi ${LIB_DIR}/libcurl.dll)

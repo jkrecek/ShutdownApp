@@ -19,6 +19,7 @@ public:
     void close();
 
 private:
+    const char* safeResponseFromat(const char* message);
     Core* core;
     SOCKET socket;
     sockaddr_in info;
