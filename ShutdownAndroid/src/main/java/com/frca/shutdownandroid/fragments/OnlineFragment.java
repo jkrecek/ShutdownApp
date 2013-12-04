@@ -36,11 +36,10 @@ public class OnlineFragment extends ChildFragment {
                 item.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        NetworkThread thread = getMainActivity().getThread();
                         String str = getResponseForView(view.getId());
-                        if (str == null)
-                            Toast.makeText(getActivity(), "No action specified for view id `" + String.valueOf(view.getId()) + "`", Toast.LENGTH_LONG).show();
-                        else {
-                            NetworkThread thread = getMainActivity().getThread();
+
+                        if (str != null) {
                             thread.setIp(connection.getIp());
                             thread.sendMessage(str, new NetworkThread.OnMessageReceived() {
                                 @Override
@@ -51,7 +50,17 @@ public class OnlineFragment extends ChildFragment {
                                         Toast.makeText(getActivity(), "Error!", Toast.LENGTH_LONG).show();
                                 }
                             });
+                            return;
                         }
+
+                        if (view.getId() == R.id.torrent) {
+                            thread.setIp(connection.getIp());
+                            thread.sendMessage("TORRENT");
+                            return;
+                        }
+
+
+                        Toast.makeText(getActivity(), "No action specified for view id `" + String.valueOf(view.getId()) + "`", Toast.LENGTH_LONG).show();
                     }
                 });
             }
