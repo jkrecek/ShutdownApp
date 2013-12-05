@@ -9,8 +9,6 @@ Core::Core(int _port) : port(_port)
     WSADATA data;
     sockaddr_in sockname;
 
-    //std::string cosi = Helper::GetSZValueUnique( HKEY_CLASSES_ROOT, "Magnet\\shell\\open\\command\\", "");
-
     if (WSAStartup(wVersionRequested, &data) != 0)
     {
         std::cerr << "E: Couldn't initialize sockets." << std::endl;
@@ -43,8 +41,6 @@ Core::Core(int _port) : port(_port)
         return;
     }
 
-
-
     initialized = true;
 }
 
@@ -70,7 +66,7 @@ int Core::run()
         if (con.getSocket() == INVALID_SOCKET)
         {
             std::cerr << "E: Couldn't accept connection." << std::endl;
-            continue;
+            break;
         }
 
         con.handle();

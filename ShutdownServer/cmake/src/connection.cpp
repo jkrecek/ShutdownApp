@@ -8,6 +8,7 @@
 #include "helper.h"
 #include "urlhandler.h"
 #include <algorithm>
+#include <map>
 
 #define BUFFER_SIZE 1000
 
@@ -51,21 +52,29 @@ void Connection::handle()
 
 void Connection::process(const char* message)
 {
-    char* rest = NULL;
-    std::string command = strtok_s((char*)message, " ", &rest);
+    std::string mesStr = message;
+    std::size_t firstSpace = mesStr.find(" ");
+    std::string command , arguments;
+    if (firstSpace == std::string::npos)
+        command = mesStr;
+    else
+    {
+        command = mesStr.substr(0, firstSpace);
+        arguments = mesStr.substr(firstSpace);
+    }
 
-    std::cout << "Inc command: " << command << std::endl;
+    std::cout << "I: Incoming command: '" << command << "'" << std::endl;
 
     Command controlCommand;
     if ((controlCommand = core->getServerControl()->getCommand(command)) != NONE)
     {
-        responseClose(core->getServerControl()->execute(controlCommand));
+        respondAndClose(core->getServerControl()->execute(controlCommand));
         return;
     }
 
     if (command == "GET_MAC")
     {
-        IpAddress serverIp = rest ? IpAddress(rest) : NULL;
+        IpAddress serverIp = !arguments.empty() ? IpAddress(arguments.c_str()) : NULL;
         IpAddress clientIp = inet_ntoa((in_addr)info.sin_addr);
         const char * mac = Helper::getMAC(&clientIp, &serverIp);
         if (mac == "") {
@@ -74,17 +83,22 @@ void Connection::process(const char* message)
                 mac = "ERROR";
         }
 
-        std::cout << mac << std::endl;
-        responseClose(mac);
+        respondAndClose(mac);
         return;
     }
 
     if (command == "TORRENT")
     {
-        URLHandler handler;
-        std::string response = handler.loadUrl("http://eztv.it");
-        responseClose(response.substr(0,50).c_str());
+        std::vector<std::string> series = getArgsByQuotation(arguments, true);
+        std::list<EpisodeTorrent> torrents = getTorrentMagnets();
 
+        filterTorrents(series, torrents);
+
+        respond("Torrents filtered, running magnet links");
+
+        runTorrents(torrents);
+
+        respondAndClose("Done");
         return;
     }
 }
@@ -95,11 +109,13 @@ void Connection::respond(const char *message)
     message = safeResponseFromat(message);
     if ((size = send(socket, message, strlen(message), 0)) == SOCKET_ERROR)
     {
-        std::cerr << "Could not send data" << std::endl;
+        std::string errMsg = message;
+        errMsg = errMsg.substr(0, errMsg.size() - 1);
+        std::cout << "W: Could not send data: `" << errMsg << "`" << std::endl;
     }
 }
 
-void Connection::responseClose(const char *message)
+void Connection::respondAndClose(const char *message)
 {
     respond(message);
     close();
@@ -115,17 +131,101 @@ void Connection::close()
 const char *Connection::safeResponseFromat(const char *message)
 {
     std::string str = message;
-    size_t start_pos = 0;
-    const char* from = "\n";
-    const char* to = "\\n";
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, strlen(from), to);
-        start_pos += strlen(to); // In case 'to' contains 'from', like replacing 'x' with 'yx'
-    }
-    //int idx = str.find("x");
-    //str.replace(idx, 1, "y");
-
+    str = Helper::replace(str, "\n", "\\n");
     str += "\n";
     return str.c_str();
 }
 
+std::list<EpisodeTorrent> Connection::getTorrentMagnets()
+{
+    URLHandler handler;
+    respond("Start downloading page");
+
+    std::list<EpisodeTorrent> list;
+    /*std::string response = handler.loadUrl("http://eztv.it");
+    if (response.empty())
+    {
+        responseClose("Page return wrong http code");
+        return;
+    }
+
+    respond("Page downloaded, parsing links now");
+    list = handler.getEztvMagnets(response);*/
+
+    std::string url_start = "http://thepiratebay.sx/user/eztv/";
+    char buffer[2];
+    for (int i = 0; i < 5; ++i)
+    {
+        std::string url = url_start + itoa(i, buffer, 10) + "/3";
+        std::string response = handler.loadUrl(url.c_str());
+        if (response.empty())
+            respondAndClose("Page return wrong http code");
+        else
+        {
+            respond("Page downloaded, parsing links now");
+            std::list<EpisodeTorrent> magnets = handler.getPirateBayMagnets(response);
+            list.insert(list.end(), magnets.begin(), magnets.end());
+        }
+    }
+    respond("Parse complete");
+
+    return list;
+}
+
+std::vector<std::string> Connection::getArgsByQuotation(std::string arg, bool lower = false)
+{
+    std::vector<std::string> v;
+    for (std::size_t st = 0, en = 0; (st = arg.find('"', st)) != std::string::npos; st = en + 1)
+    {
+        en = arg.find('"', ++st);
+        if (lower)
+            v.push_back(Helper::toLowerCase(arg.substr(st, en - st)));
+        else
+            v.push_back(arg.substr(st, en - st-1));
+    }
+
+    return v;
+}
+
+void Connection::filterTorrents(std::vector<std::string> series, std::list<EpisodeTorrent> &torrents)
+{
+    std::vector<std::string>::iterator it;
+    for (std::list<EpisodeTorrent>::iterator itr = torrents.begin(); itr != torrents.end(); )
+    {
+        const std::string& title = Helper::toLowerCase((*itr).getTitle());
+        if ((it = std::find(series.begin(), series.end(), title)) == series.end())
+        {
+            itr = torrents.erase(itr);
+            continue;
+        }
+
+        bool isBeingRemoved = false;
+        for (std::list<EpisodeTorrent>::iterator altItr = torrents.begin(); altItr != itr; ++altItr)
+        {
+            if (!(*itr).isSameEpisode(*altItr))
+                continue;
+
+            if ((*itr).getQuality() > (*altItr).getQuality())
+                torrents.erase(altItr);
+            else
+                itr = torrents.erase(itr);
+
+            isBeingRemoved = true;
+            break;
+        }
+
+        if (!isBeingRemoved)
+            ++itr;
+    }
+}
+
+void Connection::runTorrents(const std::list<EpisodeTorrent> &torrents)
+{
+    std::string magnetAppPath = Helper::GetSZValueUnique( HKEY_CLASSES_ROOT, "Magnet\\shell\\open\\command\\", "");
+
+    for(std::list<EpisodeTorrent>::const_iterator itr = torrents.begin(); itr != torrents.end(); ++itr)
+    {
+        std::string command = "start " + Helper::replace(magnetAppPath, "%1", (*itr).getMagnet().c_str());
+        system(command.c_str());
+    }
+}
