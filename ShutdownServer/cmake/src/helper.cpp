@@ -2,6 +2,8 @@
 #include <sstream>
 #include <iostream>
 #include <Iphlpapi.h>
+#include <algorithm>
+
 
 #define MAC_SIZE 17
 
@@ -22,6 +24,29 @@ std::vector<std::string> Helper::split(const std::string &s, char delim)
     std::vector<std::string> elems;
     split(s, delim, elems);
     return elems;
+}
+
+std::string Helper::trim(std::string s)
+{
+    s.erase(s.find_last_not_of(" \n\r\t")+1);
+    return s;
+}
+
+std::string Helper::toLowerCase(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+    return s;
+}
+
+std::string Helper::replace(std::string s, const char *from, const char *to)
+{
+    std::size_t start_pos = 0;
+    while((start_pos = s.find(from, start_pos)) != std::string::npos) {
+        s.replace(start_pos, strlen(from), to);
+        start_pos += strlen(to);
+    }
+
+    return s;
 }
 
 std::string Helper::GetSZValueUnique( HKEY openKey, const char* regkey, const char* keyName )
@@ -123,8 +148,6 @@ const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NUL
                 candidate->Address[0], candidate->Address[1],
                 candidate->Address[2], candidate->Address[3],
                 candidate->Address[4], candidate->Address[5]);
-
-            //std::string ipAddressString = IpAddress(pAdapterInfo->IpAddressList.IpAddress.String).getString();
         }
     }
 
