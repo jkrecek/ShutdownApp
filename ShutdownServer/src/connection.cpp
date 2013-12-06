@@ -101,6 +101,26 @@ void Connection::process(const char* message)
         respondAndClose("Done");
         return;
     }
+
+    if (command == "GET_VOLUME")
+    {
+        char chararray[6];
+        ServerControl* control = core->getServerControl();
+        float volume = control->getVolumeLevel();
+        snprintf (chararray, 7, "%1.4f", volume);
+        respondAndClose(&chararray[0]);
+
+        return;
+    }
+
+    if (command == "SET_VOLUME")
+    {
+        float value = atof(arguments.c_str());
+        ServerControl* control = core->getServerControl();
+        control->setVolumeLevel(value);
+        respondAndClose("OK");
+        return;
+    }
 }
 
 void Connection::respond(const char *message)

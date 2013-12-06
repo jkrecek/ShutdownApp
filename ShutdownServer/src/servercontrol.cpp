@@ -1,5 +1,8 @@
-#include "servercontrol.h"
+#include <windows.h>
+#include <mmdeviceapi.h>
 #include <iostream>
+#include <Tchar.h>
+#include "servercontrol.h"
 
 #define COMMAND_TURN_OFF "shutdown /s /f /t 0"
 #define COMMAND_RESTART "shutdown /r /f /t 0"
@@ -7,6 +10,7 @@
 #define COMMAND_SLEEP "rundll32 powrprof.dll,SetSuspendState Standby"
 
 ServerControl::ServerControl()
+    : audioEndpoint(NULL)
 {
 }
 
@@ -46,4 +50,46 @@ Command ServerControl::getCommand(std::string string)
         return SLEEP;
 
     return NONE;
+}
+
+float ServerControl::getVolumeLevel()
+{
+    IAudioEndpointVolume* endpoint = getAudioEndpoint();
+
+    float volumeLevel = 0.f;
+    endpoint->GetMasterVolumeLevelScalar(&volumeLevel);
+    return volumeLevel;
+}
+
+
+void ServerControl::setVolumeLevel(float volumeLevel)
+{
+    IAudioEndpointVolume* endpoint = getAudioEndpoint();
+
+    GUID guid = GUID_NULL;
+    CoCreateGuid(&guid);
+
+    endpoint->SetMasterVolumeLevelScalar(volumeLevel, &guid);
+}
+
+IAudioEndpointVolume* ServerControl::getAudioEndpoint()
+{
+    if (!audioEndpoint)
+    {
+        HRESULT hr = S_OK;
+        IMMDeviceEnumerator *pEnumerator = NULL;
+        IMMDevice *pDevice = NULL;
+
+        CoInitialize(NULL);
+
+        hr = CoCreateInstance(__uuidof(MMDeviceEnumerator),NULL, CLSCTX_INPROC_SERVER,
+                              __uuidof(IMMDeviceEnumerator), (void**)&pEnumerator);
+
+
+        hr = pEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &pDevice);
+
+        hr = pDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_ALL, NULL, (void**)&audioEndpoint);
+    }
+
+    return audioEndpoint;
 }
