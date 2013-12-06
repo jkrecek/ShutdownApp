@@ -3,7 +3,7 @@
 #include "helper.h"
 #include "connection.h"
 
-Core::Core(int _port) : port(_port)
+Core::Core(int _port) : port(_port), serverControl(NULL)
 {
     WORD wVersionRequested = MAKEWORD(1, 1);
     WSADATA data;
