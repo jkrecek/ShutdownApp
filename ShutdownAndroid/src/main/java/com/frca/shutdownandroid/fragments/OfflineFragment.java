@@ -12,7 +12,6 @@ import android.widget.Toast;
 
 import com.frca.shutdownandroid.Connection;
 import com.frca.shutdownandroid.MainActivity;
-import com.frca.shutdownandroid.NetworkThread;
 import com.frca.shutdownandroid.R;
 
 import java.net.DatagramPacket;
@@ -114,7 +113,7 @@ public class OfflineFragment extends ChildFragment {
         return bytes;
     }
 
-    private static String getString(byte[] bytes) {
+    public static String getString(byte[] bytes) {
         StringBuilder sb = new StringBuilder(bytes.length * 3);
         for (byte b : bytes) {
             String hex = Integer.toHexString(0xFF & b);

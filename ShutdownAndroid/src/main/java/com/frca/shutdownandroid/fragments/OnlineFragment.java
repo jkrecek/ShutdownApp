@@ -1,5 +1,7 @@
 package com.frca.shutdownandroid.fragments;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,14 +10,18 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.frca.shutdownandroid.Connection;
+import com.frca.shutdownandroid.HttpTask;
 import com.frca.shutdownandroid.NetworkThread;
 import com.frca.shutdownandroid.R;
+
+import java.util.List;
 
 /**
  * Created by KillerFrca on 1.12.13.
  */
 public class OnlineFragment extends ChildFragment {
 
+    private String currentMessage;
     public OnlineFragment(Connection connection) {
         super(connection);
     }
@@ -36,7 +42,7 @@ public class OnlineFragment extends ChildFragment {
                 item.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        NetworkThread thread = getMainActivity().getThread();
+                        final NetworkThread thread = getMainActivity().getThread();
                         String str = getResponseForView(view.getId());
 
                         if (str != null) {
@@ -54,11 +60,9 @@ public class OnlineFragment extends ChildFragment {
                         }
 
                         if (view.getId() == R.id.torrent) {
-                            thread.setIp(connection.getIp());
-                            thread.sendMessage("TORRENT");
+                            handleTorrentRequest(thread);
                             return;
                         }
-
 
                         Toast.makeText(getActivity(), "No action specified for view id `" + String.valueOf(view.getId()) + "`", Toast.LENGTH_LONG).show();
                     }
@@ -78,5 +82,48 @@ public class OnlineFragment extends ChildFragment {
         }
 
         return null;
+    }
+
+    private void handleTorrentRequest(final NetworkThread thread) {
+        new HttpTask(getActivity(), "http://www.serialzone.cz/watchlist/", new HttpTask.OnHandled() {
+            @Override
+            public void call(List<String> list) {
+                if (list == null)
+                    return;
+                thread.setIp(connection.getIp());
+                final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("Data").setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                });
+
+                final AlertDialog dialog = builder.create();
+                currentMessage = "";
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("TORRENT ");
+                for (String ser : list) {
+                    ser = ser.replaceAll("\\.", " ");
+                    ser = ser.replaceAll("-", " ");
+                    sb.append("\""+ser+"\", ");
+                }
+
+                thread.sendMessage(sb.toString(), new NetworkThread.OnMessageReceived() {
+                    @Override
+                    public void messageReceived(String message) {
+                        if (!currentMessage.equals(""))
+                            currentMessage += "\n";
+
+                        currentMessage += message;
+
+                        dialog.setMessage(currentMessage);
+                        if (!dialog.isShowing())
+                            dialog.show();
+                    }
+                });
+            }
+        }).execute();
     }
 }

@@ -3,6 +3,8 @@ package com.frca.shutdownandroid;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -19,16 +21,11 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-
 
 import com.frca.shutdownandroid.fragments.MainFragment;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -38,6 +35,9 @@ import java.util.Set;
 public class MainActivity extends Activity implements ActionBar.OnNavigationListener {
 
     private static final String KEY_CONNECTIONS = "connections";
+
+    private static final String NAVIGATION_IDX = "navi_idx";
+
     private NetworkThread thread;
 
     private List<Connection> connections = new ArrayList<Connection>();
@@ -54,9 +54,15 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
 
         if (connections.isEmpty())
             getActionBar().setTitle("Add connection");
-        else
+        else {
             displayAdapter(false);
 
+            int idx = savedInstanceState != null ? savedInstanceState.getInt(NAVIGATION_IDX) : 0;
+            if (idx == 0)
+                idx = getPreferences(this).getInt(NAVIGATION_IDX, 0);
+
+            getActionBar().setSelectedNavigationItem(idx);
+        }
     }
 
     @Override
@@ -65,6 +71,14 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
 
         context = this;
     }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.e("SAVING_VALUE", String.valueOf(getActionBar().getSelectedNavigationIndex()));
+        outState.putInt(NAVIGATION_IDX, getActionBar().getSelectedNavigationIndex());
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -300,12 +314,23 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
 
     @Override
     public boolean onNavigationItemSelected(int i, long l) {
-        getFragmentManager()
-            .beginTransaction()
-            .replace(R.id.container, new MainFragment(connections.get(i)))
-            .addToBackStack(null)
-            .commit();
+        MainActivity.getPreferences(this).edit().putInt(NAVIGATION_IDX, i).commit();
+        Fragment fragment = getFragmentManager().findFragmentById(R.id.container);
+        FragmentTransaction trans = getFragmentManager().beginTransaction().replace(R.id.container, new MainFragment(connections.get(i)));
+        if (fragment != null && fragment instanceof MainFragment)
+            trans.addToBackStack(null);
+
+        trans.commit();
 
         return false;
+    }
+
+    @Override
+    public void onBackPressed() {
+        finish();
+    }
+
+    public static SharedPreferences getPreferences(Context context) {
+        return context.getSharedPreferences(context.getApplicationInfo().name, Context.MODE_PRIVATE);
     }
 }
