@@ -1,12 +1,15 @@
 package com.frca.shutdownandroid.fragments;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.frca.shutdownandroid.Connection;
@@ -64,6 +67,11 @@ public class OnlineFragment extends ChildFragment {
                             return;
                         }
 
+                        if (view.getId() == R.id.volume) {
+                            handleVolumeRequest(thread);
+                            return;
+                        }
+
                         Toast.makeText(getActivity(), "No action specified for view id `" + String.valueOf(view.getId()) + "`", Toast.LENGTH_LONG).show();
                     }
                 });
@@ -79,6 +87,7 @@ public class OnlineFragment extends ChildFragment {
             case R.id.restart:  return "RESTART";
             case R.id.lock:     return "LOCK";
             case R.id.sleep:    return "SLEEP";
+            //case R.id.volume:   return "GET_VOLUME";
         }
 
         return null;
@@ -125,5 +134,60 @@ public class OnlineFragment extends ChildFragment {
                 });
             }
         }).execute();
+    }
+
+    private void handleVolumeRequest(final NetworkThread thread) {
+        thread.setIp(connection.getIp());
+        thread.sendMessage("GET_VOLUME", new NetworkThread.OnMessageReceived() {
+            @Override
+            public void messageReceived(String message) {
+                float value = Float.valueOf(message);
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+                LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                final View view = inflater.inflate(R.layout.dialog_seek, null);
+
+                final TextView nameField = (TextView) view.findViewById(R.id.text1);
+                final TextView valueField = (TextView) view.findViewById(R.id.text2);
+                nameField.setText("Current volume:");
+                SeekBar bar = (SeekBar) view.findViewById(R.id.seek);
+                bar.setMax(1000);
+                final LimitedExecutor runnable = new LimitedExecutor(100);
+                bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(final SeekBar seekBar, final int i, boolean b) {
+                        runnable.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                valueField.setText(String.valueOf(i/10.f) + "%");
+                                float outValue = seekBar.getProgress()/1000.f;
+                                thread.sendMessage("SET_VOLUME " + String.valueOf(outValue), NetworkThread.doNothingOnMessage);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+
+                    }
+                });
+                bar.setProgress((int) (value * 1000));
+                builder.setTitle("Set Volume")
+                    .setView(view)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    });
+
+                builder.create().show();;
+            }
+        });
     }
 }

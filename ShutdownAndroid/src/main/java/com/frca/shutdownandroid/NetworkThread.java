@@ -107,6 +107,9 @@ public class NetworkThread /*extends Thread implements Runnable */ {
         public void exceptionReceived(Exception e);
     }
 
+    public static OnMessageReceived doNothingOnMessage = new OnMessageReceived() { @Override public void messageReceived(String message) { } };
+    public static OnExceptionReceived doNothingOnException = new OnExceptionReceived() { @Override public void exceptionReceived(Exception e) { } };
+
     public static class Command {
         private String command;
 
