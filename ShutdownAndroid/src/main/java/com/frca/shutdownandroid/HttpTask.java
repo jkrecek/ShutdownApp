@@ -33,11 +33,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -111,7 +108,7 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
     }
 
     private void setCredentialCookies() throws IOException {
-        getCredetials();
+        getCredentials();
 
         HttpResponse response = execute(getPost(URL_LOGIN));
 
@@ -144,17 +141,12 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
         entity.consumeContent();
 
         Document doc = Jsoup.parse(text);
-        Log.e("TITLE", doc.title());
         return doc.body().select("div#disc-big-main-topic > *");
     }
 
     private List<String> parseShows(Elements elements) {
-        if (elements == null) {
-            Log.e("parse", "here null");
+        if (elements == null)
             return null;
-        }
-
-        Log.e("parse", "later");
 
         List<String> series = new ArrayList<String>();
         for (Element element : elements) {
@@ -180,28 +172,6 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
             Log.i(getClass().getSimpleName(), "Strings are null");
 
         callback.call(strings);
-    }
-
-    public static String parseText(InputStream is, Charset charset) throws IOException {
-
-        String result;
-        ByteArrayOutputStream baos;
-
-        baos = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int length;
-        try {
-            while ((length = is.read(buffer)) != -1) {
-                baos.write(buffer, 0, length);
-            }
-        } finally {
-            is.close();
-        }
-
-        result = baos.toString(charset.name());
-
-        return result;
-
     }
 
     private HttpGet getGet(String url) {
@@ -278,7 +248,7 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
         Log.d("RESPONSE_DUMP", sb.toString());
     }
 
-    private void getCredetials() {
+    private void getCredentials() {
         username = MainActivity.getPreferences(context).getString(KEY_USERNAME, null);
         password = MainActivity.getPreferences(context).getString(KEY_PASSWORD, null);
 
@@ -286,7 +256,7 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override
                 public void run() {
-                    showRequestCredDialog();
+                    showRequestCredentialsDialog();
                 }
             });
 
@@ -300,7 +270,7 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
         }
     }
 
-    private AlertDialog showRequestCredDialog() {
+    private AlertDialog showRequestCredentialsDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
