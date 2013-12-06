@@ -173,7 +173,9 @@ public class OnlineFragment extends ChildFragment {
 
                     @Override
                     public void onStopTrackingTouch(SeekBar seekBar) {
-
+                        valueField.setText(String.valueOf(seekBar.getProgress()/10.f) + "%");
+                        float outValue = seekBar.getProgress()/1000.f;
+                        thread.sendMessage("SET_VOLUME " + String.valueOf(outValue), NetworkThread.doNothingOnMessage);
                     }
                 });
                 bar.setProgress((int) (value * 1000));
