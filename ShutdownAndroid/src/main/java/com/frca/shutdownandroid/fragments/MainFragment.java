@@ -140,6 +140,9 @@ public class MainFragment extends Fragment {
     }
 
     private void refreshChild(boolean success) {
+        if (getActivity() == null)
+            return;
+
         if (currentChildFragment != null) {
             if (success ? currentChildFragment instanceof OnlineFragment : currentChildFragment instanceof OfflineFragment) {
                 return;
