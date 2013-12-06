@@ -16,7 +16,8 @@ import java.util.regex.Pattern;
 public class NetworkThread /*extends Thread implements Runnable */ {
 
     public static final int SERVER_PORT = 3691;
-    public static final int TIMEOUT = 5000;
+    public static final int CONNECT_TIMEOUT = 2000;
+    public static final int STREAM_TIMEOUT = 15000;
 
     public static final Pattern MAC_ADDRESS = Pattern.compile("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$");
 
@@ -63,8 +64,8 @@ public class NetworkThread /*extends Thread implements Runnable */ {
         if (TextUtils.isEmpty(ipAddress))
             throw new IOException("No Ip Address!");
 
-        socket.connect(new InetSocketAddress(ipAddress, NetworkThread.SERVER_PORT), NetworkThread.TIMEOUT);
-        socket.setSoTimeout(NetworkThread.TIMEOUT);
+        socket.connect(new InetSocketAddress(ipAddress, NetworkThread.SERVER_PORT), NetworkThread.CONNECT_TIMEOUT);
+        socket.setSoTimeout(NetworkThread.STREAM_TIMEOUT);
 
         Log.i("Network", "M: Connected in " + String.valueOf(System.currentTimeMillis() - cur) + " milis.");
         return socket;
