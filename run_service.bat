@@ -1,7 +1,7 @@
 @echo off
 set file=temp.reg
 set hstart=%cd%\bin\hstart
-set binPath=%cd%\bin\msvc\ShutdownServer.exe
+set binPath=%cd%\bin\ShutdownServer.exe
 set hstart=%hstart:\=\\%
 set binPath=%binPath:\=\\% 
 
