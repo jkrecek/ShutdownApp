@@ -6,7 +6,7 @@ public class Connection {
     private String ip;
     private String mac;
 
-    private long lastCheckedTime = System.currentTimeMillis();
+    private long lastCheckedTime;
 
     public Connection(String ip, String mac) {
         this.ip = ip;
