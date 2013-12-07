@@ -32,9 +32,8 @@ public class Connection {
     public void isOnline(NetworkThread thread, PingResult result) {
         if (System.currentTimeMillis() - lastCheckedTime < 30000)
             result.result(true);
-
-        thread.setIp(getIp());
-        thread.pingConnection(this, result);
+        else
+            thread.pingConnection(this, result);
     }
 
     public interface PingResult {

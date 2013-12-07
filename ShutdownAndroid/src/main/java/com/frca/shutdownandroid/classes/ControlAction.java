@@ -2,6 +2,7 @@ package com.frca.shutdownandroid.classes;
 
 import com.frca.shutdownandroid.R;
 import com.frca.shutdownandroid.fragments.ControlFragment;
+import com.frca.shutdownandroid.fragments.MainFragment;
 import com.frca.shutdownandroid.network.NetworkThread;
 
 import java.util.ArrayList;
@@ -62,6 +63,6 @@ public enum ControlAction {
     }
 
     public interface OnActionClick {
-        void call(final ControlFragment fragment, final ControlAction action, final Connection connection, final NetworkThread thread);
+        void call(final MainFragment fragment, final ControlAction action, final NetworkThread thread);
     }
 }

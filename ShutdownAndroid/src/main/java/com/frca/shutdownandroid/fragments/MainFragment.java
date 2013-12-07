@@ -11,9 +11,9 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.frca.shutdownandroid.R;
 import com.frca.shutdownandroid.classes.Connection;
 import com.frca.shutdownandroid.classes.ControlAction;
-import com.frca.shutdownandroid.R;
 
 /**
  * Created by KillerFrca on 1.12.13.
@@ -78,16 +78,10 @@ public class MainFragment extends BaseFragment {
         return layoutView;
     }
 
-    @Override
-    public void onViewCreated (View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-
-    }
-
     private void refresh() {
         progress.setVisibility(View.VISIBLE);
         layout_state.setVisibility(View.GONE);
+        ((ControlFragment)currentChildFragment).setState(null, false);
         connection.isOnline(getMainActivity().getThread(), new Connection.PingResult() {
             @Override
             public void result(boolean success) {

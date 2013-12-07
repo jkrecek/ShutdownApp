@@ -8,8 +8,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.frca.shutdownandroid.classes.ControlAction;
 import com.frca.shutdownandroid.R;
+import com.frca.shutdownandroid.classes.ControlAction;
 
 import java.util.List;
 

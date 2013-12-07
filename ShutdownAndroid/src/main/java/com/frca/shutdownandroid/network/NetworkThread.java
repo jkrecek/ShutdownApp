@@ -1,15 +1,17 @@
 package com.frca.shutdownandroid.network;
 
+import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.frca.shutdownandroid.Helpers.Helper;
+import com.frca.shutdownandroid.classes.Command;
 import com.frca.shutdownandroid.classes.Connection;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.regex.Pattern;
 
 /**
@@ -23,40 +25,47 @@ public class NetworkThread /*extends Thread implements Runnable */ {
 
     public static final Pattern MAC_ADDRESS = Pattern.compile("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$");
 
-    private OnMessageReceived defaultMessageListener;
-    private OnExceptionReceived defaultExceptionReceived;
-    private Socket socket;
-    private BufferedReader input;
-    private DataOutputStream output;
+    private Connection connection;
+    private Context context;
 
-    private String ip;
-
-    public NetworkThread(OnMessageReceived messageListener, OnExceptionReceived exceptionReceived) {
-        defaultMessageListener = messageListener;
-        defaultExceptionReceived = exceptionReceived;
+    public NetworkThread(Context context) {
+        this.context = context;
     }
 
     public Command sendMessage(String message) {
-        return sendMessage(message, defaultMessageListener);
+        return sendMessage(message, defaultMessageReceiver);
     }
 
     public Command sendMessage(String message, OnMessageReceived messageReceived) {
-        return sendMessage(message, messageReceived, defaultExceptionReceived);
+        return sendMessage(message, messageReceived, defaultExceptionReceiver);
     }
 
     public Command sendMessage(String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
         Command command = new Command(message, messageReceived, exceptionReceived);
-        NetworkTask.start(ip, command);
+        run(connection.getIp(), command);
         return command;
     }
 
-    public void setIp(String ip) {
-        this.ip = ip;
+    public Command sendMessage(String ipAddress, String message) {
+        return sendMessage(ipAddress, message, defaultMessageReceiver);
     }
 
-    public String getIp() {
-        return ip;
+    public Command sendMessage(String ipAddress, String message, OnMessageReceived messageReceived) {
+        return sendMessage(ipAddress, message, messageReceived, defaultExceptionReceiver);
     }
+
+    public Command sendMessage(String ipAddress, String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
+        Command command = new Command(message, messageReceived, exceptionReceived);
+        run(ipAddress, command);
+        return command;
+    }
+
+    public static NetworkTask run(String ipAddress, Command command) {
+        NetworkTask task = new NetworkTask(ipAddress, command);
+        task.start();
+        return task;
+    }
+
 
     public static Socket createSocket(String ipAddress) throws IOException {
         Log.i("Network", "Sock: Connecting");
@@ -73,7 +82,7 @@ public class NetworkThread /*extends Thread implements Runnable */ {
         return socket;
     }
 
-    public static Socket destroySocket(Socket socket) throws IOException {
+    public static Socket closeSocket(Socket socket) throws IOException {
         if (socket != null) {
             socket.close();
             socket = null;
@@ -84,7 +93,7 @@ public class NetworkThread /*extends Thread implements Runnable */ {
     }
 
     public void pingConnection(Connection connection, final Connection.PingResult resultCallback) {
-        sendMessage("GET_MAC " + connection.getIp(), new OnMessageReceived() {
+        sendMessage(connection.getIp(), "GET_MAC " + connection.getIp(), new OnMessageReceived() {
             @Override
             public void messageReceived(String responseMAC) {
                 boolean success = true;
@@ -101,6 +110,14 @@ public class NetworkThread /*extends Thread implements Runnable */ {
         });
     }
 
+    public void setConnection(Connection connection) {
+        this.connection = connection;
+    }
+
+    public Connection getConnection() {
+        return connection;
+    }
+
     public interface OnMessageReceived {
         public void messageReceived(String message);
     }
@@ -112,28 +129,23 @@ public class NetworkThread /*extends Thread implements Runnable */ {
     public static OnMessageReceived doNothingOnMessage = new OnMessageReceived() { @Override public void messageReceived(String message) { } };
     public static OnExceptionReceived doNothingOnException = new OnExceptionReceived() { @Override public void exceptionReceived(Exception e) { } };
 
-    public static class Command {
-        private String command;
-
-        private OnMessageReceived messageReceived = null;
-        private OnExceptionReceived exceptionReceived = null;
-
-        private Command(String command, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
-            this.command = command;
-            this.messageReceived = messageReceived;
-            this.exceptionReceived = exceptionReceived;
+    private OnMessageReceived defaultMessageReceiver = new OnMessageReceived() {
+        @Override
+        public void messageReceived(String message) {
+            Helper.showDialog(context, "Response", message);
         }
+    };
 
-        public String getCommand() {
-            return command;
-        }
+    private OnExceptionReceived defaultExceptionReceiver = new OnExceptionReceived() {
+        @Override
+        public void exceptionReceived(Exception e) {
+            if (e instanceof SocketTimeoutException) {
+                Helper.showDialog(context, "Connection error", "App could not connect to host `" + getConnection().getIp() + "`, port `" + NetworkThread.SERVER_PORT + "`" );
+                e.printStackTrace();
+                return;
+            }
 
-        public OnMessageReceived getMessageReceived() {
-            return messageReceived;
+            Helper.showDialog(context, "Unhandled exception", Helper.getStackTrace(e));
         }
-
-        public OnExceptionReceived getExceptionReceived() {
-            return exceptionReceived;
-        }
-    }
+    };
 }

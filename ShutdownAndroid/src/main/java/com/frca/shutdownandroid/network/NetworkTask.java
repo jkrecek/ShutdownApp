@@ -1,9 +1,10 @@
 package com.frca.shutdownandroid.network;
 
-import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.frca.shutdownandroid.Helpers.Helper;
+import com.frca.shutdownandroid.classes.Command;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -16,17 +17,15 @@ import java.net.Socket;
  */
 public class NetworkTask extends Thread implements Runnable {
 
-    private NetworkThread.Command command;
+    private Command command;
 
     private String ipAddress;
+
     private Socket socket;
 
-    public static NetworkTask start(String ipAddress, NetworkThread.Command command) {
-        NetworkTask task = new NetworkTask();
-        task.ipAddress = ipAddress;
-        task.command = command;
-        task.start();
-        return task;
+    public NetworkTask(String ipAddress, Command command) {
+        this.ipAddress = ipAddress;
+        this.command = command;
     }
 
     @Override
@@ -47,19 +46,20 @@ public class NetworkTask extends Thread implements Runnable {
                 if (input.ready()) {
                     String line;
                     while ((line = input.readLine()) != null) {
-                        if (line.equals("CLOSE")) {
-                            Log.i(getClass().getSimpleName(), "Closing socket");
-                            break;
-                        }
+                        if (line.equals("CLOSE"))
+                            return;
+
                         final String response = getReceivedString(line);
                         if (response != null) {
                             Log.i(getClass().getSimpleName(), "Read: " + response);
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    command.getMessageReceived().messageReceived(response);
-                                }
-                            });
+                            if (command.getMessageReceived() != null) {
+                                Helper.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        command.getMessageReceived().messageReceived(response);
+                                    }
+                                });
+                            }
                         }
                     }
                 }
@@ -71,15 +71,18 @@ public class NetworkTask extends Thread implements Runnable {
                 }
             }
         } catch (final IOException e) {
-            runOnUiThread(new Runnable() {
+            if (command.getExceptionReceived() != null) {
+                Helper.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     command.getExceptionReceived().exceptionReceived(e);
                 }
             });
+            }
         } finally {
             try {
-                NetworkThread.destroySocket(socket);
+                NetworkThread.closeSocket(socket);
+                Log.i(getClass().getSimpleName(), "Socket closed");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -96,9 +99,5 @@ public class NetworkTask extends Thread implements Runnable {
 
         string = string.replaceAll("\\\\n", "\n");
         return string;
-    }
-
-    private void runOnUiThread(Runnable run) {
-        new Handler(Looper.getMainLooper()).post(run);
     }
 }

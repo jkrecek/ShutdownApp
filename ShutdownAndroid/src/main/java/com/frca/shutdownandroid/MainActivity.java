@@ -2,11 +2,9 @@ package com.frca.shutdownandroid;
 
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,14 +19,12 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.frca.shutdownandroid.Helpers.Helper;
 import com.frca.shutdownandroid.adapters.ConnectionArrayAdapter;
 import com.frca.shutdownandroid.classes.Connection;
 import com.frca.shutdownandroid.fragments.MainFragment;
 import com.frca.shutdownandroid.network.NetworkThread;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -44,9 +40,15 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
 
     private List<Connection> connections = new ArrayList<Connection>();
 
+    private MainFragment currentFragment;
+
+    private boolean running = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        running = true;
 
         setContentView(R.layout.activity_main);
 
@@ -66,8 +68,26 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        running = true;
+        Fragment fragment = getFragmentManager().findFragmentById(R.id.container);
+        if (fragment == null || !fragment.equals(currentFragment))
+            setFragment(currentFragment);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        running = false;
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+
         outState.putInt(NAVIGATION_IDX, getActionBar().getSelectedNavigationIndex());
     }
 
@@ -184,17 +204,16 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
         im.hideSoftInputFromWindow(editText.getWindowToken(), 0);
 
         NetworkThread nt = getThread();
-        nt.setIp(inputIp);
-        nt.sendMessage("GET_MAC " + inputIp, new NetworkThread.OnMessageReceived() {
+        nt.sendMessage(inputIp, "GET_MAC " + inputIp, new NetworkThread.OnMessageReceived() {
             @Override
             public void messageReceived(String responseMAC) {
                 if (responseMAC.length() != 17) {
-                    showDialog("Error", "Unexpected length of response");
+                    Helper.showDialog(MainActivity.this, "Error", "Unexpected length of response");
                     return;
                 }
 
                 if (!NetworkThread.MAC_ADDRESS.matcher(responseMAC).matches()) {
-                    showDialog("Error", "Unexpected format of response");
+                    Helper.showDialog(MainActivity.this, "Error", "Unexpected format of response");
                     return;
                 }
 
@@ -217,14 +236,14 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
         }, new NetworkThread.OnExceptionReceived() {
                 @Override
                 public void exceptionReceived(Exception e) {
-                    showDialog("Error", getStackTrace(e));
+                    Helper.showDialog(MainActivity.this, "Error", "Couldn't connect to to '" + inputIp + "'.");
                 }
             });
     }
 
     public NetworkThread getThread() {
         if (thread == null)
-            thread = new NetworkThread(defaultMessageReceiver, defaultExceptionReceiver);
+            thread = new NetworkThread(this);
 
         return thread;
     }
@@ -260,61 +279,31 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
         return null;
     }
 
-    private NetworkThread.OnMessageReceived defaultMessageReceiver = new NetworkThread.OnMessageReceived() {
-        @Override
-        public void messageReceived(String message) {
-            showDialog("Response", message );
-        }
-    };
-
-    private NetworkThread.OnExceptionReceived defaultExceptionReceiver = new NetworkThread.OnExceptionReceived() {
-        @Override
-        public void exceptionReceived(Exception e) {
-            if (e instanceof SocketTimeoutException) {
-                showDialog("Connection error", "App could not connect to host `" + getThread().getIp() + "`, port `" + NetworkThread.SERVER_PORT + "`" );
-                e.printStackTrace();
-                return;
-            }
-
-            showDialog("Unhandled exception", getStackTrace(e));
-        }
-    };
-
-    private void showDialog(String title, String message) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this).setTitle(title).setMessage(message).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.dismiss();
-            }
-        });
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                builder.create().show();
-            }
-        });
-
-    }
-
-    private String getStackTrace(Throwable t) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        t.printStackTrace(pw);
-        return sw.toString();
-    }
-
     @Override
     public boolean onNavigationItemSelected(int i, long l) {
         MainActivity.getPreferences(this).edit().putInt(NAVIGATION_IDX, i).commit();
         Fragment fragment = getFragmentManager().findFragmentById(R.id.container);
-        FragmentTransaction trans = getFragmentManager().beginTransaction().replace(R.id.container, MainFragment.newInstance(connections.get(i).getIp()));
-        if (fragment != null && fragment instanceof MainFragment)
+        Connection connection = connections.get(i);
+        currentFragment = MainFragment.newInstance(connection.getIp());
+        getThread().setConnection(connection);
+
+        if (running)
+            setFragment(currentFragment);
+
+
+        return false;
+    }
+
+    private void setFragment(MainFragment fragment) {
+        if (fragment == null)
+            return;
+
+        Fragment currentFragment = getFragmentManager().findFragmentById(R.id.container);
+        FragmentTransaction trans = getFragmentManager().beginTransaction().replace(R.id.container, fragment);
+        if (currentFragment != null && currentFragment instanceof MainFragment)
             trans.addToBackStack(null);
 
         trans.commit();
-
-        return false;
     }
 
     @Override

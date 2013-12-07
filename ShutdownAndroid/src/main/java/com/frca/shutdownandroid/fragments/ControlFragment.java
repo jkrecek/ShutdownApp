@@ -15,14 +15,14 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.frca.shutdownandroid.Helpers.Helper;
+import com.frca.shutdownandroid.Helpers.LimitedExecutor;
+import com.frca.shutdownandroid.R;
+import com.frca.shutdownandroid.adapters.ControlGridAdapter;
 import com.frca.shutdownandroid.classes.Connection;
 import com.frca.shutdownandroid.classes.ControlAction;
-import com.frca.shutdownandroid.adapters.ControlGridAdapter;
-import com.frca.shutdownandroid.Helpers.Helper;
-import com.frca.shutdownandroid.network.http.HttpTask;
-import com.frca.shutdownandroid.Helpers.LimitedExecutor;
 import com.frca.shutdownandroid.network.NetworkThread;
-import com.frca.shutdownandroid.R;
+import com.frca.shutdownandroid.network.http.HttpTask;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,6 +84,7 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
                 if (state == null) {
                     loadingLayout.setVisibility(View.VISIBLE);
                     gridView.setVisibility(View.GONE);
+
                 } else {
                     loadingLayout.setVisibility(View.GONE);
                     gridView.setVisibility(View.VISIBLE);
@@ -93,17 +94,16 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
             }
         };
 
-        if (getView() == null)
+        if (loadingLayout == null)
             postponed.add(runnable);
         else
             runnable.run();
-
     }
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
         ControlAction action = (ControlAction) adapterView.getAdapter().getItem(i);
-        action.getCallback().call(this, action, getConnection(), getMainActivity().getThread());
+        action.getCallback().call(getMainFragment(), action, getMainActivity().getThread());
     }
 
     private ControlGridAdapter getGridAdapter(ControlAction.ConnectionState state) {
@@ -146,18 +146,18 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
 
     public static ControlAction.OnActionClick turnOnControlClick = new ControlAction.OnActionClick() {
         @Override
-        public void call(ControlFragment fragment, ControlAction action, Connection connection, NetworkThread thread) {
-            Helper.sendWoLMagicPacket(connection.getIp(), connection.getMac());
+        public void call(MainFragment fragment, ControlAction action, NetworkThread thread) {
+            Helper.sendWoLMagicPacket(thread.getConnection().getIp(), thread.getConnection().getMac());
         }
     };
 
     public static ControlAction.OnActionClick basicControlClick = new ControlAction.OnActionClick() {
 
         @Override
-        public void call(final ControlFragment fragment, ControlAction action, Connection connection, NetworkThread thread) {
+        public void call(final MainFragment fragment, ControlAction action, NetworkThread thread) {
             String message;
             switch (action) {
-                case POWER_OFF:      message = "TURN_OFF"; break;
+                case POWER_OFF:     message = "TURN_OFF"; break;
                 case RESTART:       message = "RESTART"; break;
                 case LOCK:          message = "LOCK"; break;
                 case SLEEP:         message = "SLEEP"; break;
@@ -165,7 +165,6 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
             }
 
             if (message != null) {
-                thread.setIp(connection.getIp());
                 thread.sendMessage(message, new NetworkThread.OnMessageReceived() {
                     @Override
                     public void messageReceived(String message) {
@@ -183,14 +182,13 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
 
     public static ControlAction.OnActionClick torrentControlClick = new ControlAction.OnActionClick() {
         @Override
-        public void call(final ControlFragment fragment, final ControlAction action, final Connection connection, final NetworkThread thread) {
+        public void call(final MainFragment fragment, final ControlAction action, final NetworkThread thread) {
             new HttpTask(fragment.getActivity(), "http://www.serialzone.cz/watchlist/", new HttpTask.OnHandled() {
                 @Override
                 public void call(List<String> list) {
                     if (list == null)
                         return;
 
-                    thread.setIp(connection.getIp());
                     final AlertDialog.Builder builder = new AlertDialog.Builder(fragment.getActivity());
                     builder.setTitle("Data").setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
@@ -230,8 +228,7 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
 
     public static ControlAction.OnActionClick volumeControlClick = new ControlAction.OnActionClick() {
         @Override
-        public void call(final ControlFragment fragment, ControlAction action, Connection connection, final NetworkThread thread) {
-            thread.setIp(connection.getIp());
+        public void call(final MainFragment fragment, ControlAction action, final NetworkThread thread) {
             thread.sendMessage("GET_VOLUME", new NetworkThread.OnMessageReceived() {
                 @Override
                 public void messageReceived(String message) {
