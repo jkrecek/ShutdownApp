@@ -1,6 +1,8 @@
-package com.frca.shutdownandroid;
+package com.frca.shutdownandroid.classes;
 
+import com.frca.shutdownandroid.R;
 import com.frca.shutdownandroid.fragments.ControlFragment;
+import com.frca.shutdownandroid.network.NetworkThread;
 
 import java.util.ArrayList;
 import java.util.List;

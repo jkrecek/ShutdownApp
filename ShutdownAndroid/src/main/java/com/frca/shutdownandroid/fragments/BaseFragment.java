@@ -4,7 +4,6 @@ import android.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.frca.shutdownandroid.Connection;
 import com.frca.shutdownandroid.MainActivity;
 
 public abstract class BaseFragment extends Fragment {

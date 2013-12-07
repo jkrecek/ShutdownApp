@@ -1,6 +1,8 @@
-package com.frca.shutdownandroid;
+package com.frca.shutdownandroid.adapters;
 
 import android.content.Context;
+
+import com.frca.shutdownandroid.classes.Connection;
 
 /**
  * Created by KillerFrca on 1.12.13.

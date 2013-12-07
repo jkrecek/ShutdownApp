@@ -1,4 +1,4 @@
-package com.frca.shutdownandroid;
+package com.frca.shutdownandroid.Helpers;
 
 import android.os.Handler;
 import android.os.Looper;

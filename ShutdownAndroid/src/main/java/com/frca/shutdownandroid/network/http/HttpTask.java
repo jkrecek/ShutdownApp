@@ -1,4 +1,4 @@
-package com.frca.shutdownandroid;
+package com.frca.shutdownandroid.network.http;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -12,6 +12,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+
+import com.frca.shutdownandroid.MainActivity;
+import com.frca.shutdownandroid.R;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;

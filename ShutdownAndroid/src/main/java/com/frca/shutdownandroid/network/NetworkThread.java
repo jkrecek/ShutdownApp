@@ -1,7 +1,9 @@
-package com.frca.shutdownandroid;
+package com.frca.shutdownandroid.network;
 
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.frca.shutdownandroid.classes.Connection;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;

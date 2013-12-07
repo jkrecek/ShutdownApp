@@ -15,16 +15,14 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.frca.shutdownandroid.Connection;
-import com.frca.shutdownandroid.ControlAction;
-import com.frca.shutdownandroid.ControlGridAdapter;
-import com.frca.shutdownandroid.Helper;
-import com.frca.shutdownandroid.HttpTask;
-import com.frca.shutdownandroid.LimitedExecutor;
-import com.frca.shutdownandroid.NetworkThread;
+import com.frca.shutdownandroid.classes.Connection;
+import com.frca.shutdownandroid.classes.ControlAction;
+import com.frca.shutdownandroid.adapters.ControlGridAdapter;
+import com.frca.shutdownandroid.Helpers.Helper;
+import com.frca.shutdownandroid.network.http.HttpTask;
+import com.frca.shutdownandroid.Helpers.LimitedExecutor;
+import com.frca.shutdownandroid.network.NetworkThread;
 import com.frca.shutdownandroid.R;
-
-import org.apache.http.Header;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -11,8 +11,8 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.frca.shutdownandroid.Connection;
-import com.frca.shutdownandroid.ControlAction;
+import com.frca.shutdownandroid.classes.Connection;
+import com.frca.shutdownandroid.classes.ControlAction;
 import com.frca.shutdownandroid.R;
 
 /**

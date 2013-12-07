@@ -11,7 +11,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.Patterns;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -22,7 +21,10 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.frca.shutdownandroid.adapters.ConnectionArrayAdapter;
+import com.frca.shutdownandroid.classes.Connection;
 import com.frca.shutdownandroid.fragments.MainFragment;
+import com.frca.shutdownandroid.network.NetworkThread;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

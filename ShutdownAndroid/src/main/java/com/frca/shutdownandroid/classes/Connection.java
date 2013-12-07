@@ -1,4 +1,6 @@
-package com.frca.shutdownandroid;
+package com.frca.shutdownandroid.classes;
+
+import com.frca.shutdownandroid.network.NetworkThread;
 
 public class Connection {
     private String ip;

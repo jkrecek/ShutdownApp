@@ -1,4 +1,4 @@
-package com.frca.shutdownandroid;
+package com.frca.shutdownandroid.Helpers;
 
 /**
  * Created by KillerFrca on 6.12.13.
