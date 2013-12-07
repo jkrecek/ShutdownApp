@@ -24,7 +24,7 @@ public abstract class TwoLineArrayAdapter<T> extends ArrayAdapter<T> {
         LayoutInflater inflater = (LayoutInflater)getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         View listItemView = convertView;
-        if (null == convertView) {
+        if (listItemView == null) {
             listItemView = inflater.inflate(mListItemLayoutResId, parent, false);
         }
 

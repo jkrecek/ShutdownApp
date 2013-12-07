@@ -1,59 +1,20 @@
-package com.frca.shutdownandroid.fragments;
+package com.frca.shutdownandroid;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.Toast;
-
-import com.frca.shutdownandroid.Connection;
-import com.frca.shutdownandroid.MainActivity;
-import com.frca.shutdownandroid.R;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 /**
- * Created by KillerFrca on 1.12.13.
+ * Created by KillerFrca on 7.12.13.
  */
-public class OfflineFragment extends ChildFragment {
+public abstract class Helper {
 
-    public OfflineFragment(Connection connection) {
-        super(connection);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        LinearLayout layout = (LinearLayout) inflater.inflate(R.layout.fragment_offline, container, false);
-        for (int i = 0; i < layout.getChildCount(); ++i) {
-            LinearLayout child = (LinearLayout) layout.getChildAt(i);
-            if (child == null)
-                continue;
-
-            child.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    switch (view.getId()) {
-                        case R.id.turn_on:
-                            wakeUp(connection.getIp(), connection.getMac());
-                            return;
-                    }
-
-                    Toast.makeText(getActivity(), "No action specified for view id `" + String.valueOf(view.getId()) + "`", Toast.LENGTH_LONG).show();
-                }
-            });
-        }
-
-        return layout;
-    }
-
-    private void wakeUp(final String broadcastIp, final String macAddress)
-    {
+    public static void sendWoLMagicPacket(final String broadcastIp, final String macAddress) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -79,24 +40,18 @@ public class OfflineFragment extends ChildFragment {
                     socket.close();
 
                     Log.e("WAKE_UP", "Wake-on-LAN packet sent.");
-                    final String output = getString(bytes);
+                    final String output = getStringFromBytes(bytes);
                     Log.i("WAKE_UP", output);
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(MainActivity.context, output, Toast.LENGTH_LONG).show();
-                        }
-                    });
                 }
                 catch (Exception e) {
                     Log.e("WAKE_UP", "Failed to send Wake-on-LAN packet: " + e);
-                    Toast.makeText(getActivity(), "Failed to send Wake-on-LAN packet: " + e, Toast.LENGTH_LONG).show();
+
                 }
             }
         }).start();
     }
 
-    private static byte[] getMacBytes(String macStr) throws IllegalArgumentException {
+    public static byte[] getMacBytes(String macStr) throws IllegalArgumentException {
         byte[] bytes = new byte[6];
         String[] hex = macStr.split("(\\:|\\-)");
         if (hex.length != 6) {
@@ -113,7 +68,7 @@ public class OfflineFragment extends ChildFragment {
         return bytes;
     }
 
-    public static String getString(byte[] bytes) {
+    public static String getStringFromBytes(byte[] bytes) {
         StringBuilder sb = new StringBuilder(bytes.length * 3);
         for (byte b : bytes) {
             String hex = Integer.toHexString(0xFF & b);

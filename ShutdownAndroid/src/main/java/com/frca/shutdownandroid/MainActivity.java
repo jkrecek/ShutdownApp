@@ -42,8 +42,6 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
 
     private List<Connection> connections = new ArrayList<Connection>();
 
-    public static Context context;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,16 +64,8 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        context = this;
-    }
-
-    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        Log.e("SAVING_VALUE", String.valueOf(getActionBar().getSelectedNavigationIndex()));
         outState.putInt(NAVIGATION_IDX, getActionBar().getSelectedNavigationIndex());
     }
 
@@ -316,7 +306,7 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
     public boolean onNavigationItemSelected(int i, long l) {
         MainActivity.getPreferences(this).edit().putInt(NAVIGATION_IDX, i).commit();
         Fragment fragment = getFragmentManager().findFragmentById(R.id.container);
-        FragmentTransaction trans = getFragmentManager().beginTransaction().replace(R.id.container, new MainFragment(connections.get(i)));
+        FragmentTransaction trans = getFragmentManager().beginTransaction().replace(R.id.container, MainFragment.newInstance(connections.get(i).getIp()));
         if (fragment != null && fragment instanceof MainFragment)
             trans.addToBackStack(null);
 
@@ -332,5 +322,20 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
 
     public static SharedPreferences getPreferences(Context context) {
         return context.getSharedPreferences(context.getApplicationInfo().name, Context.MODE_PRIVATE);
+    }
+
+    public Connection getConnectionForIp(String ip) {
+        if (ip == null)
+            return null;
+
+        for (Connection connection : connections)
+            if (connection.getIp().equals(ip))
+                return connection;
+
+        return null;
+    }
+
+    public Fragment getCurrentFragment() {
+        return getFragmentManager().findFragmentById(R.id.container);
     }
 }

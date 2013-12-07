@@ -1,4 +1,4 @@
-package com.frca.shutdownandroid.fragments;
+package com.frca.shutdownandroid;
 
 /**
  * Created by KillerFrca on 6.12.13.
