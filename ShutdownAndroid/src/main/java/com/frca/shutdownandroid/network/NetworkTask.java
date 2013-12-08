@@ -82,7 +82,6 @@ public class NetworkTask extends Thread implements Runnable {
         } finally {
             try {
                 NetworkThread.closeSocket(socket);
-                Log.i(getClass().getSimpleName(), "Socket closed");
             } catch (IOException e) {
                 e.printStackTrace();
             }

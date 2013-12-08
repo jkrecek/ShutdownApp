@@ -86,7 +86,7 @@ public class NetworkThread /*extends Thread implements Runnable */ {
         if (socket != null) {
             socket.close();
             socket = null;
-            Log.i("Network", "Sock: Destroyed");
+            Log.i("Network", "Sock: Closed");
         }
 
         return socket;
