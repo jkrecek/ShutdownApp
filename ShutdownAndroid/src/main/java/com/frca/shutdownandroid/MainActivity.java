@@ -6,6 +6,7 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
@@ -25,6 +26,7 @@ import com.frca.shutdownandroid.classes.Connection;
 import com.frca.shutdownandroid.fragments.MainFragment;
 import com.frca.shutdownandroid.network.NetworkThread;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -205,40 +207,52 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
 
         NetworkThread nt = getThread();
         nt.sendMessage(inputIp, "GET_MAC " + inputIp, new NetworkThread.OnMessageReceived() {
-            @Override
-            public void messageReceived(String responseMAC) {
-                if (responseMAC.length() != 17) {
-                    Helper.showDialog(MainActivity.this, "Error", "Unexpected length of response");
-                    return;
-                }
-
-                if (!NetworkThread.MAC_ADDRESS.matcher(responseMAC).matches()) {
-                    Helper.showDialog(MainActivity.this, "Error", "Unexpected format of response");
-                    return;
-                }
-
-                Connection connection = null;
-                for (Connection con : connections) {
-                    if (con.getIp() == inputIp) {
-                        connection = con;
-                        break;
+                @Override
+                public void messageReceived(final String responseMAC) {
+                    if (responseMAC.length() != 17) {
+                        Helper.showDialog(MainActivity.this, "Error", "Unexpected length of response");
+                        return;
                     }
-                }
 
-                if (connection != null) {
-                    connection.setMac(responseMAC);
-                } else {
-                    connections.add(new Connection(inputIp, responseMAC));
-                }
+                    if (!NetworkThread.MAC_ADDRESS.matcher(responseMAC).matches()) {
+                        Helper.showDialog(MainActivity.this, "Error", "Unexpected format of response");
+                        return;
+                    }
 
-                displayAdapter(true);
-            }
-        }, new NetworkThread.OnExceptionReceived() {
+                    new AsyncTask<Void, Void, String>() {
+                        @Override
+                        protected String doInBackground(Void... voids) {
+                            return new InetSocketAddress(inputIp, NetworkThread.SERVER_PORT).getHostName();
+                        }
+
+                        @Override
+                        protected void onPostExecute(String s) {
+                            Connection connection = null;
+                            for (Connection con : connections) {
+                                if (con.getIp() == inputIp) {
+                                    connection = con;
+                                    break;
+                                }
+                            }
+                            String hostname = s.substring(0, s.indexOf("."));
+                            if (connection != null) {
+                                connection.setMac(responseMAC);
+                                connection.setHostname(hostname);
+                            } else {
+                                connections.add(new Connection(inputIp, responseMAC, hostname));
+                            }
+
+                            displayAdapter(true);
+                        }
+                    }.execute();
+                }
+            }, new NetworkThread.OnExceptionReceived() {
                 @Override
                 public void exceptionReceived(Exception e) {
                     Helper.showDialog(MainActivity.this, "Error", "Couldn't connect to to '" + inputIp + "'.");
                 }
-            });
+            }
+        );
     }
 
     public NetworkThread getThread() {
@@ -256,7 +270,7 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
 
         for (String s : conn_set) {
             String parts[] = s.split("\n");
-            connections.add(new Connection(parts[0], parts[1]));
+            connections.add(new Connection(parts[0], parts[1], parts[2]));
         }
     }
 
@@ -264,7 +278,7 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
         SharedPreferences prefs = getPreferences(MODE_PRIVATE);
         Set<String> conn_set = new HashSet<String>();
         for (Connection con : connections)
-            conn_set.add(con.getIp() + "\n" + con.getMac());
+            conn_set.add(con.getIp() + "\n" + con.getMac() + "\n" + con.getHostname());
 
         prefs.edit().putStringSet(KEY_CONNECTIONS, conn_set).commit();
     }

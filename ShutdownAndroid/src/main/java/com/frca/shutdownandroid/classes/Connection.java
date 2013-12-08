@@ -3,14 +3,17 @@ package com.frca.shutdownandroid.classes;
 import com.frca.shutdownandroid.network.NetworkThread;
 
 public class Connection {
+
     private String ip;
     private String mac;
+    private String hostname;
 
     private long lastCheckedTime;
 
-    public Connection(String ip, String mac) {
+    public Connection(String ip, String mac, String hostname) {
         this.ip = ip;
         this.mac = mac;
+        this.hostname = hostname;
     }
 
     public String getIp() {
@@ -27,6 +30,14 @@ public class Connection {
 
     public void setMac(String mac) {
         this.mac = mac;
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
     }
 
     public void isOnline(NetworkThread thread, PingResult result) {

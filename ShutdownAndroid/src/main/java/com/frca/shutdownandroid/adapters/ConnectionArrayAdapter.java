@@ -14,11 +14,11 @@ public class ConnectionArrayAdapter extends TwoLineArrayAdapter<Connection> {
 
     @Override
     public String getFirstLine(Connection connection) {
-        return connection.getIp();
+        return connection.getHostname();
     }
 
     @Override
     public String getSecondLine(Connection connection) {
-        return connection.getMac();
+        return connection.getIp();
     }
 }
