@@ -32,32 +32,30 @@ public class NetworkThread /*extends Thread implements Runnable */ {
         this.context = context;
     }
 
-    public Command sendMessage(String message) {
-        return sendMessage(message, defaultMessageReceiver);
+    public void sendMessage(String message) {
+        sendMessage(message, defaultMessageReceiver);
     }
 
-    public Command sendMessage(String message, OnMessageReceived messageReceived) {
-        return sendMessage(message, messageReceived, defaultExceptionReceiver);
+    public void sendMessage(String message, OnMessageReceived messageReceived) {
+        sendMessage(message, messageReceived, defaultExceptionReceiver);
     }
 
-    public Command sendMessage(String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
+    public void sendMessage(String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
         Command command = new Command(message, messageReceived, exceptionReceived);
         run(connection.getIp(), command);
-        return command;
     }
 
-    public Command sendMessage(String ipAddress, String message) {
-        return sendMessage(ipAddress, message, defaultMessageReceiver);
+    public void sendMessage(String ipAddress, String message) {
+        sendMessage(ipAddress, message, defaultMessageReceiver);
     }
 
-    public Command sendMessage(String ipAddress, String message, OnMessageReceived messageReceived) {
-        return sendMessage(ipAddress, message, messageReceived, defaultExceptionReceiver);
+    public void sendMessage(String ipAddress, String message, OnMessageReceived messageReceived) {
+        sendMessage(ipAddress, message, messageReceived, defaultExceptionReceiver);
     }
 
-    public Command sendMessage(String ipAddress, String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
+    public void sendMessage(String ipAddress, String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
         Command command = new Command(message, messageReceived, exceptionReceived);
         run(ipAddress, command);
-        return command;
     }
 
     public static NetworkTask run(String ipAddress, Command command) {
