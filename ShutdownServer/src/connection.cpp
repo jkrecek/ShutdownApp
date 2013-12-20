@@ -172,7 +172,7 @@ std::list<EpisodeTorrent> Connection::getTorrentMagnets()
     respond("Page downloaded, parsing links now");
     list = handler.getEztvMagnets(response);*/
 
-    std::string url_start = "http://thepiratebay.pe/user/eztv/";
+    std::string url_start = "http://thepiratebay.org/user/eztv/";
     char buffer[2];
     for (int i = 0; i < 5; ++i)
     {
