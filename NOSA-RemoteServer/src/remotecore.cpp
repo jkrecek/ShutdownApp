@@ -62,6 +62,7 @@ int RemoteCore::run()
     {
         addrLen = sizeof(clientInfo);
         TCPSocket _socket = accept(mainSocket, (sockaddr*)&clientInfo, &addrLen);
+        std::cout << "IC[" << _socket << "]" << std::endl;
         NetworkSocket* socket = new NetworkSocket(_socket);
         BaseConnection* connection = BaseConnection::estabilishConnection(socket);
         sConnections.insert(connection);

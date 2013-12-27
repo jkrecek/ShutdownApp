@@ -32,18 +32,17 @@ public:
     void close();
     bool isOpen() { return opened; }
 
-    int getId() { return id; }
+    int geSocketId() { return socket; }
 
 private:
     std::string findLineInBuffer();
 
     TCPSocket socket;
-    //char buffer[BUFFER_SIZE];
+
     char* buffer;
     int size;
 
     bool opened;
-    int id;
 };
 
 #endif // TCPSOCKET_H

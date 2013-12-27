@@ -17,6 +17,6 @@ void AndroidConnection::redistributeLine(std::string line)
     for (std::vector<AndroidConnection*>::iterator itr = conns.begin(); itr != conns.end(); ++itr)
     {
         if (this != *itr)
-            (*itr)->getSocket()->send(line.c_str());
+            (*itr)->getSocket()->sendLine(line.c_str());
     }
 }

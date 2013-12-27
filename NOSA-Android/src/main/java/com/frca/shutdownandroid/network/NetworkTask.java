@@ -61,7 +61,6 @@ public class NetworkTask extends Thread implements Runnable {
                         final String response = getReceivedString(line);
                         if (response != null) {
                             Log.i(getClass().getSimpleName(), "Read: " + response);
-                            Log.e("!!!", "RCV: " + response);
                             if (command.getMessageReceived() != null) {
                                 Helper.runOnUiThread(new Runnable() {
                                     @Override

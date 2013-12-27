@@ -8,9 +8,6 @@ NetworkSocket::NetworkSocket(TCPSocket _socket)
     : socket(_socket), size(0), opened(true)
 {
     buffer = (char*) malloc (BUFFER_SIZE);
-    static int sId = 0;
-    ++sId;
-    id = sId;
 }
 
 NetworkSocket::~NetworkSocket()
@@ -29,11 +26,8 @@ std::string NetworkSocket::readLine()
             return l;
     }
 
-    std::cout << "Waiting for inc packet [" << id << "]" << std::endl;
     size = recv(socket, buffer, BUFFER_SIZE - 1, 0);
     line.append(findLineInBuffer());
-    //std::string copy = line;
-    std::cout << "RCV[" << id << "]:" << line << std::endl;
     return line.c_str();
 }
 
@@ -74,21 +68,22 @@ void NetworkSocket::sendLine(const char* line)
 
 void NetworkSocket::send(const char* message)
 {
+    if (!message || !strlen(message))
+        return;
+
     size_t size;
-    std::cout << "SND[" << id << "]:" << message << std::endl;
     if ((size = ::send(socket, message, strlen(message), 0)) == SOCKET_ERROR)
     {
         std::string errMsg = message;
         errMsg = errMsg.substr(0, errMsg.size() - 1);
         std::cout << "W: Could not send data: `" << errMsg << "`" << std::endl;
     }
-    std::cout << "SND[" << id << "][OK]" << std::endl;
 }
 
 void NetworkSocket::close()
 {
     const char* closeStr = "CLOSE\n";
-    ::send(socket, closeStr, strlen(closeStr), 0);
+    ::send(socket, closeStr, strlen(closeStr)+1, 0);
     closesocket(socket);
     opened = false;
 }

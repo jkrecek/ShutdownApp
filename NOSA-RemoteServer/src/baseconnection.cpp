@@ -19,7 +19,6 @@ BaseConnection* BaseConnection::estabilishConnection(NetworkSocket *socket)
 {
     std::string line = socket->readLine();
 
-    //std::cout << "Line: " << line << std::endl;
     NVMap parameters = socket->parsePacket(line);
     if (!parameters.contains("type") ||
         !parameters.contains("user") ||
@@ -49,10 +48,16 @@ void BaseConnection::read()
 {
     while(socket->isOpen())
     {
-        std::cout << "W[" << socket->getId() <<  "]" << std::endl;
         std::string line = socket->readLine();
         if (line.empty())
             continue;
+
+        if (line == "CLOSE")
+        {
+            socket->close();
+            continue;
+        }
+
         redistributeLine(line);
     }
 }
