@@ -3,6 +3,7 @@
 #include "helper.h"
 #include "connectioncontainer.h"
 #include <unistd.h>
+
 #ifndef _WIN32
     #include <pthread.h>
     #include <unistd.h>
@@ -13,51 +14,9 @@
 RemoteCore::RemoteCore(int _port)
     : port(_port), server(NULL)
 {
-#ifdef _WIN32
-    WORD wVersionRequested = MAKEWORD(1, 1);
-    WSADATA data;
+    prepareSockets();
 
-    if (WSAStartup(wVersionRequested, &data) != 0)
-    {
-        std::cerr << "E: Couldn't initialize sockets." << std::endl;
-        initialized = false;
-        return;
-    }
-#endif
-
-    sockaddr_in sockname;
-    TCPSocket _server;
-    if ((_server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET)
-    {
-        std::cerr << "E: Couldn't create socket." << std::endl;
-        initialized = false;
-        return;
-    }
-
-
-
-    sockname.sin_family = AF_INET;
-    sockname.sin_port = htons(port);
-    sockname.sin_addr.s_addr = INADDR_ANY;
-
-
-    if (bind(_server, (sockaddr *)&sockname, sizeof(sockname)) == SOCKET_ERROR)
-    {
-        std::cerr << "E: Couldn't bind socket." << std::endl;
-        initialized = false;
-        return;
-    }
-
-    server = new NetworkSocket(_server, sockname);
-
-    if (listen(server->getSocket(), 10) == SOCKET_ERROR)
-    {
-        std::cerr << "E: Couldn't create listining queue." << std::endl;
-        initialized = false;
-        return;
-    }
-
-    initialized = true;
+    server = ServerSocket::createSocket(port);
 }
 
 RemoteCore::~RemoteCore()
@@ -67,18 +26,13 @@ RemoteCore::~RemoteCore()
 
 int RemoteCore::run()
 {
-    if (!initialized)
+    if (!server)
         return -1;
 
-    SocketLength addrLen;
-    sockaddr_in clientInfo;
 
     do
     {
-        addrLen = sizeof(clientInfo);
-        TCPSocket _socket = accept(server->getSocket(), (sockaddr*)&clientInfo, &addrLen);
-        std::cout << "IC[" << _socket << "]" << std::endl;
-        NetworkSocket* socket = new NetworkSocket(_socket, clientInfo);
+        NetworkSocket* socket = server->acceptConnection();
         BaseConnection* connection = BaseConnection::estabilishConnection(socket);
         sConnections.insert(connection);
 
@@ -105,11 +59,7 @@ int RemoteCore::run()
     } while (true);
 
     std::cout << "Ending" << std::endl;
-#ifdef _WIN32
-        (mainSocket);
-#else
-    // TODO
-#endif
+    server->close();
 
     return 0;
 }
@@ -123,16 +73,46 @@ void RemoteCore::startThread(BaseConnection *connection)
 #endif
 }
 
-
-THREAD_RETURN_TYPE RemoteCore::handleConnection(void* data)
+void RemoteCore::endThread()
 {
-    BaseConnection* connection = static_cast<BaseConnection*>(data);
-    connection->read();
+    // must be called?
 #ifdef _WIN32
-    _endthread(); // is it necessery?
+    _endthread();
 #else
     pthread_exit(NULL);
 #endif
 }
 
 
+THREAD_RETURN_TYPE RemoteCore::handleConnection(void* data)
+{
+    BaseConnection* connection = static_cast<BaseConnection*>(data);
+    connection->read();
+    endThread();
+}
+
+void RemoteCore::prepareSockets()
+{
+#ifdef _WIN32
+    WORD wVersionRequested = MAKEWORD(1, 1);
+    WSADATA data;
+
+    if (WSAStartup(wVersionRequested, &data) != 0)
+    {
+        std::cerr << "E: Couldn't initialize sockets." << std::endl;
+        initialized = false;
+        return;
+    }
+#else
+    return;
+#endif
+}
+
+void RemoteCore::cleanSockets()
+{
+#ifdef _WIN32
+    WSACleanup();
+#else
+    return;
+#endif
+}

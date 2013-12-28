@@ -9,9 +9,7 @@ int main()
     Configuration::loadFile("D:\\Dropbox\\Dev\\ShutdownApp\\config.conf");
     RemoteCore core(PORT);
     int result = core.run();
-#ifdef _WIN32
-    WSACleanup();
-#endif
+    core.cleanSockets();
     return result;
 }
 

@@ -5,6 +5,7 @@
 #include "ipaddress.h"
 #include "networksocket.h"
 #include "baseconnection.h"
+#include "serversocket.h"
 
 #ifdef _WIN32
     #define THREAD_RETURN_TYPE unsigned __stdcall
@@ -23,13 +24,17 @@ public:
 
     int run();
 
-    void startThread(BaseConnection* connection);
     static THREAD_RETURN_TYPE handleConnection(void* data);
+
+    static void startThread(BaseConnection* connection);
+    static void endThread();
+
+    static void prepareSockets();
+    static void cleanSockets();
 
 private:
     int port;
-    bool initialized;
-    NetworkSocket* server;
+    ServerSocket* server;
 };
 
 #endif // CORE_H

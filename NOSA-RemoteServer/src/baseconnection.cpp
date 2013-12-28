@@ -46,7 +46,7 @@ BaseConnection* BaseConnection::estabilishConnection(NetworkSocket *socket)
 
 void BaseConnection::read()
 {
-    while(socket->isOpen())
+    while(socket)
     {
         std::string line = socket->readLine();
         if (line.empty())
@@ -54,7 +54,8 @@ void BaseConnection::read()
 
         if (line == "CLOSE")
         {
-            socket->close();
+            delete socket;
+            socket = NULL;
             continue;
         }
 

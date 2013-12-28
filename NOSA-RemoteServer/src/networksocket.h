@@ -9,11 +9,13 @@
 #ifdef _WIN32
     #include <windows.h>
     typedef SOCKET TCPSocket;
+    typedef int SocketLength;
 #else
     #include <sys/types.h>
     #include <sys/socket.h>
     #include <netinet/in.h>
     typedef int TCPSocket;
+    typedef socklen_t SocketLength;
 #endif
 
 #ifndef SOCKET_ERROR
@@ -38,6 +40,7 @@ public:
     void send(const char* message);
 
     void close();
+
     bool isOpen() { return opened; }
 
     int getSocketId() { return socket; }
@@ -46,8 +49,10 @@ public:
 
     const sockaddr_in& getInfo() const  { return info; }
 
-private:
+protected:
     std::string findLineInBuffer();
+
+    void doClose();
 
     TCPSocket socket;
     sockaddr_in info;

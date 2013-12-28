@@ -5,6 +5,13 @@
 #include <iostream>
 #include <stdlib.h>
 
+#ifndef _WIN32
+    #include <sys/types.h>
+    #include <sys/socket.h>
+    #include <netdb.h>
+    #include <unistd.h>
+#endif
+
 NetworkSocket::NetworkSocket(TCPSocket _socket, sockaddr_in _info)
     : socket(_socket), info(_info), size(0), opened(true)
 {
@@ -85,10 +92,17 @@ void NetworkSocket::close()
 {
     const char* closeStr = "CLOSE\n";
     ::send(socket, closeStr, strlen(closeStr)+1, 0);
+    doClose();
+}
+
+void NetworkSocket::doClose()
+{
 #ifdef _WIN32
     closesocket(socket);
+    freeaddrinfo(info);
 #else
-    // TODO
+    freeaddrinfo((addrinfo*)&info);
+    ::close(socket);
 #endif
     opened = false;
 }
