@@ -3,9 +3,10 @@
 #include <string>
 #include <stdio.h>
 #include <iostream>
+#include <stdlib.h>
 
-NetworkSocket::NetworkSocket(TCPSocket _socket)
-    : socket(_socket), size(0), opened(true)
+NetworkSocket::NetworkSocket(TCPSocket _socket, sockaddr_in _info)
+    : socket(_socket), info(_info), size(0), opened(true)
 {
     buffer = (char*) malloc (BUFFER_SIZE);
 }
@@ -84,6 +85,10 @@ void NetworkSocket::close()
 {
     const char* closeStr = "CLOSE\n";
     ::send(socket, closeStr, strlen(closeStr)+1, 0);
+#ifdef _WIN32
     closesocket(socket);
+#else
+    // TODO
+#endif
     opened = false;
 }

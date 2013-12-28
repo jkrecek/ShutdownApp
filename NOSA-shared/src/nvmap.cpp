@@ -1,6 +1,7 @@
 #include "nvmap.h"
 #include <stdlib.h>
 #include <iostream>
+#include <stdio.h>
 
 #define STR_INVALID "_INVALID_"
 

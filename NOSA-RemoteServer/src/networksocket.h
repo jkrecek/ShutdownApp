@@ -16,10 +16,18 @@
     typedef int TCPSocket;
 #endif
 
+#ifndef SOCKET_ERROR
+    #define SOCKET_ERROR -1
+#endif
+
+#ifndef INVALID_SOCKET
+    #define INVALID_SOCKET 0
+#endif
+
 class NetworkSocket
 {
 public:
-    NetworkSocket(TCPSocket socket);
+    NetworkSocket(TCPSocket socket, sockaddr_in info);
     ~NetworkSocket();
 
     std::string readLine();
@@ -32,12 +40,17 @@ public:
     void close();
     bool isOpen() { return opened; }
 
-    int geSocketId() { return socket; }
+    int getSocketId() { return socket; }
+
+    TCPSocket getSocket() { return socket; }
+
+    const sockaddr_in& getInfo() const  { return info; }
 
 private:
     std::string findLineInBuffer();
 
     TCPSocket socket;
+    sockaddr_in info;
 
     char* buffer;
     int size;

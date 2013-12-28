@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sstream>
+#include "helper.h"
 
 IpAddress::IpAddress(const char* ip_string)
 {
@@ -10,10 +11,13 @@ IpAddress::IpAddress(const char* ip_string)
         char* rest = NULL;
         int counter = 0;
 
-        char* split = strtok_s((char*)ip_string, ".", &rest);
+        StringVector vector = Helper::split(ip_string,  '.');
+        for (StringVector::iterator itr = vector.begin(); itr != vector.end(); ++itr)
+            part[counter++] = atoi((*itr).c_str());
+        /*char* split = strtok_s((char*)ip_string, ".", &rest);
         do {
             part[counter++] = atoi(split);
-        } while ((split = strtok_s(NULL, ".", &rest)) != NULL);
+        } while ((split = strtok_s(NULL, ".", &rest)) != NULL);*/
     }
     catch (int /*e*/)
     {

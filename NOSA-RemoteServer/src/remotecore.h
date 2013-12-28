@@ -2,9 +2,18 @@
 #define CORE_H
 
 #include <string>
-#include <windows.h>
 #include "ipaddress.h"
 #include "networksocket.h"
+#include "baseconnection.h"
+
+#ifdef _WIN32
+    #define THREAD_RETURN_TYPE unsigned __stdcall
+    typedef int SocketLength;
+#else
+    #define THREAD_RETURN_TYPE void*
+    typedef socklen_t SocketLength;
+#endif
+
 
 class RemoteCore
 {
@@ -14,12 +23,13 @@ public:
 
     int run();
 
-    static unsigned __stdcall handleConnection(void* data);
+    void startThread(BaseConnection* connection);
+    static THREAD_RETURN_TYPE handleConnection(void* data);
 
 private:
     int port;
     bool initialized;
-    TCPSocket mainSocket;
+    NetworkSocket* server;
 };
 
 #endif // CORE_H

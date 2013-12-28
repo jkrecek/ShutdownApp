@@ -9,6 +9,8 @@ include_directories(${INCLUDE_DIR})
 if(WIN32)
     set(LIBS ${LIBS} ws2_32)
     set(LIBS ${LIBS} iphlpapi)
+else()
+    set(LIBS ${LIBS} pthread)
 endif()
 set(LIBS ${LIBS} NOSA-shared)
 

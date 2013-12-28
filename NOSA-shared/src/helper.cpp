@@ -1,9 +1,13 @@
 #include "helper.h"
 #include <sstream>
 #include <iostream>
-#include <Iphlpapi.h>
 #include <algorithm>
+#include <stdio.h>
+#include <string.h>
 
+#ifdef _WIN32
+    #include <Iphlpapi.h>
+#endif
 
 #define MAC_SIZE 17
 
@@ -49,6 +53,7 @@ std::string Helper::replace(std::string s, const char *from, const char *to)
     return s;
 }
 
+#ifdef _WIN32
 std::string Helper::GetSZValueUnique( HKEY openKey, const char* regkey, const char* keyName )
 {
    HKEY hKey = 0;
@@ -81,9 +86,13 @@ std::string Helper::GetSZValueUnique( HKEY openKey, const char* regkey, const ch
     RegCloseKey (hKey) ;
     return "" ;
 }
+#endif
 
 const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NULL)
 {
+    #ifndef _WIN32
+        return "";
+    #else
     IP_ADAPTER_INFO* adapterInfo;
     DWORD dwBufLen = sizeof(adapterInfo);
     char *mac_addr;
@@ -153,6 +162,7 @@ const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NUL
 
     free(adapterInfo);
     return mac_addr;
+    #endif
 }
 
 bool Helper::iequals(const std::string& a, const std::string& b)
