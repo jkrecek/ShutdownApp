@@ -11,10 +11,11 @@
     #include <netdb.h>      // Needed for the socket functions
 #endif
 
-RemoteCore::RemoteCore(int _port)
-    : port(_port), server(NULL)
+RemoteCore::RemoteCore(int port)
+    : server(NULL)
 {
-    prepareSockets();
+    if (!prepareSockets())
+        return;
 
     server = ServerSocket::createSocket(port);
 }
@@ -28,7 +29,6 @@ int RemoteCore::run()
 {
     if (!server)
         return -1;
-
 
     do
     {
@@ -91,7 +91,7 @@ THREAD_RETURN_TYPE RemoteCore::handleConnection(void* data)
     endThread();
 }
 
-void RemoteCore::prepareSockets()
+bool RemoteCore::prepareSockets()
 {
 #ifdef _WIN32
     WORD wVersionRequested = MAKEWORD(1, 1);
@@ -100,11 +100,10 @@ void RemoteCore::prepareSockets()
     if (WSAStartup(wVersionRequested, &data) != 0)
     {
         std::cerr << "E: Couldn't initialize sockets." << std::endl;
-        initialized = false;
-        return;
+        return false;
     }
 #else
-    return;
+    return true;
 #endif
 }
 

@@ -29,11 +29,10 @@ public:
     static void startThread(BaseConnection* connection);
     static void endThread();
 
-    static void prepareSockets();
+    static bool prepareSockets();
     static void cleanSockets();
 
 private:
-    int port;
     ServerSocket* server;
 };
 

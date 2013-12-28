@@ -99,7 +99,7 @@ void NetworkSocket::doClose()
 {
 #ifdef _WIN32
     closesocket(socket);
-    freeaddrinfo(info);
+    //freeaddrinfo((sockaddr*)&info);
 #else
     freeaddrinfo((addrinfo*)&info);
     ::close(socket);
