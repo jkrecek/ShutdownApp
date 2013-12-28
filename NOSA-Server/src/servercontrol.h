@@ -9,6 +9,7 @@
 
 #include <string>
 #include <endpointvolume.h>
+#include "singleton.h"
 
 enum Command {
     NONE,
@@ -35,5 +36,7 @@ private:
     IAudioEndpointVolume* audioEndpoint;
 
 };
+
+#define sPCControl Singleton<ServerControl>::getInstance()
 
 #endif // SERVERCONTROL_H

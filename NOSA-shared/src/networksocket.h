@@ -37,20 +37,19 @@ public:
 
     void sendLine(const char* line);
 
-    void send(const char* message);
-
     void close();
 
+    std::string safeResponseFromat(std::string message, bool appendNewLine);
+
     bool isOpen() { return opened; }
-
     int getSocketId() { return socket; }
-
     TCPSocket getSocket() { return socket; }
-
     const sockaddr_in& getInfo() const  { return info; }
 
 protected:
     std::string findLineInBuffer();
+
+    void send(const char* message);
 
     void doClose();
 

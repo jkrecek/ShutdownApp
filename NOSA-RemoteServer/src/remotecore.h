@@ -6,6 +6,7 @@
 #include "networksocket.h"
 #include "baseconnection.h"
 #include "serversocket.h"
+#include "basecore.h"
 
 #ifdef _WIN32
     #define THREAD_RETURN_TYPE unsigned __stdcall
@@ -16,7 +17,7 @@
 #endif
 
 
-class RemoteCore
+class RemoteCore : public BaseCore
 {
 public:
     RemoteCore(int port);
@@ -27,10 +28,6 @@ public:
     static THREAD_RETURN_TYPE handleConnection(void* data);
 
     static void startThread(BaseConnection* connection);
-    static void endThread();
-
-    static bool prepareSockets();
-    static void cleanSockets();
 
 private:
     ServerSocket* server;

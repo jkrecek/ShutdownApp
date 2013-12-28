@@ -12,6 +12,7 @@ if(WIN32)
 else()
     set(LIBS ${LIBS} pthread)
 endif()
+
 set(LIBS ${LIBS} NOSA-shared)
 
 target_link_libraries(${TARGET_NAME} ${LIBS})

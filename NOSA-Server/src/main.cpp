@@ -1,13 +1,11 @@
-#include "core.h"
+#include "pccore.h"
 #include <iostream>
-
-#define PORT 3691
 
 int main()
 {
-    Core core(PORT);
+    PCCore core(SOCKET_PORT);
     int result = core.run();
-    WSACleanup();
+    core.cleanSockets();
     return result;
 }
 

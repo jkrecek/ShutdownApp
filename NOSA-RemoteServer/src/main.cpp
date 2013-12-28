@@ -2,12 +2,10 @@
 #include "remotecore.h"
 #include <iostream>
 
-#define PORT 3691
-
 int main()
 {
     Configuration::loadFile("D:\\Dropbox\\Dev\\ShutdownApp\\config.conf");
-    RemoteCore core(PORT);
+    RemoteCore core(SOCKET_PORT);
     int result = core.run();
     core.cleanSockets();
     return result;

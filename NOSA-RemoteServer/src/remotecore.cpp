@@ -6,13 +6,12 @@
 
 #ifndef _WIN32
     #include <pthread.h>
-    #include <unistd.h>
     #include <sys/socket.h> // Needed for the socket functions
     #include <netdb.h>      // Needed for the socket functions
 #endif
 
 RemoteCore::RemoteCore(int port)
-    : server(NULL)
+    : BaseCore(), server(NULL)
 {
     if (!prepareSockets())
         return;
@@ -73,17 +72,6 @@ void RemoteCore::startThread(BaseConnection *connection)
 #endif
 }
 
-void RemoteCore::endThread()
-{
-    // must be called?
-#ifdef _WIN32
-    _endthread();
-#else
-    pthread_exit(NULL);
-#endif
-}
-
-
 THREAD_RETURN_TYPE RemoteCore::handleConnection(void* data)
 {
     BaseConnection* connection = static_cast<BaseConnection*>(data);
@@ -91,27 +79,3 @@ THREAD_RETURN_TYPE RemoteCore::handleConnection(void* data)
     endThread();
 }
 
-bool RemoteCore::prepareSockets()
-{
-#ifdef _WIN32
-    WORD wVersionRequested = MAKEWORD(1, 1);
-    WSADATA data;
-
-    if (WSAStartup(wVersionRequested, &data) != 0)
-    {
-        std::cerr << "E: Couldn't initialize sockets." << std::endl;
-        return false;
-    }
-#else
-    return true;
-#endif
-}
-
-void RemoteCore::cleanSockets()
-{
-#ifdef _WIN32
-    WSACleanup();
-#else
-    return;
-#endif
-}

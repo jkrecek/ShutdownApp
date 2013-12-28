@@ -64,14 +64,8 @@ NVMap NetworkSocket::parsePacket(std::string line)
 
 void NetworkSocket::sendLine(const char* line)
 {
-    if (line[strlen(line)-1] == '\n')
-        send(line);
-    else
-    {
-        std::string l = line;
-        l += '\n';
-        send(l.c_str());
-    }
+    bool hasNewLine = line[strlen(line)-1] == '\n';
+    send(safeResponseFromat(line, !hasNewLine).c_str());
 }
 
 void NetworkSocket::send(const char* message)
@@ -105,4 +99,13 @@ void NetworkSocket::doClose()
     ::close(socket);
 #endif
     opened = false;
+}
+
+std::string NetworkSocket::safeResponseFromat(std::string message, bool appendNewLine)
+{
+    message = Helper::replace(message, "\n", "\\n");
+    if (appendNewLine)
+        message += "\n";
+
+    return message;
 }

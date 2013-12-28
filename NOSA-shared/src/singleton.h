@@ -10,6 +10,7 @@ class Singleton
             static T    instance;
             return instance;
         }
+
     private:
         Singleton() {}
         Singleton(Singleton const&);

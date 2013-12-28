@@ -7,7 +7,7 @@ add_definitions(-DCURL_STATICLIB)
 
 add_subdirectory(dep/curl)
 
-set(LIBCURL_DIR ${PROJECT_SOURCE_DIR}/dep/curl)
+set(LIBCURL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/dep/curl)
 
 aux_source_directory(src SRC_LIST)
 add_executable(${TARGET_NAME} ${SRC_LIST})
