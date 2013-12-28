@@ -46,6 +46,8 @@ public:
     TCPSocket getSocket() { return socket; }
     const sockaddr_in& getInfo() const  { return info; }
 
+    const char* getMAC(IpAddress* targetIp);
+
 protected:
     std::string findLineInBuffer();
 

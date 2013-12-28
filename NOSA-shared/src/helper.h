@@ -17,13 +17,13 @@ public:
     static std::string trim(std::string s);
     static std::string toLowerCase(std::string s);
     static std::string replace(std::string s, const char* from, const char* to);
-    static const char* getMAC(IpAddress* clientIp, IpAddress* serverIp);
     static bool iequals(const std::string& a, const std::string& b);
     static std::string to_string(int val);
     static std::string to_string(float val);
 
 #ifdef _WIN32
     static std::string GetSZValueUnique( HKEY openKey, const char* regkey, const char* keyName );
+    static const char* getMAC(IpAddress* clientIp, IpAddress* serverIp);
 #endif
 };
 

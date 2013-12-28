@@ -86,14 +86,9 @@ std::string Helper::GetSZValueUnique( HKEY openKey, const char* regkey, const ch
     RegCloseKey (hKey) ;
     return "" ;
 }
-#endif
 
 const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NULL)
 {
-    #ifndef _WIN32
-        // TODO
-        return "";
-    #else
     IP_ADAPTER_INFO* adapterInfo;
     DWORD dwBufLen = sizeof(adapterInfo);
     char *mac_addr;
@@ -163,8 +158,8 @@ const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NUL
 
     free(adapterInfo);
     return mac_addr;
-    #endif
 }
+#endif
 
 bool Helper::iequals(const std::string& a, const std::string& b)
 {

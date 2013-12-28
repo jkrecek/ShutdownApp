@@ -5,11 +5,19 @@
 #include <iostream>
 #include <stdlib.h>
 
-#ifndef _WIN32
+#ifdef _WIN32
+    #include <winsock.h>
+    #include <windows.h>
+#else
     #include <sys/types.h>
     #include <sys/socket.h>
     #include <netdb.h>
     #include <unistd.h>
+    #include <sys/ioctl.h>
+    #include <net/if.h>
+    #include <unistd.h>
+    #include <netinet/in.h>
+    #include <string.h>
 #endif
 
 NetworkSocket::NetworkSocket(TCPSocket _socket, sockaddr_in _info)
@@ -108,4 +116,56 @@ std::string NetworkSocket::safeResponseFromat(std::string message, bool appendNe
         message += "\n";
 
     return message;
+}
+
+const char* NetworkSocket::getMAC(IpAddress *targetIp)
+{
+    const char* mac_addr;
+#ifdef _WIN32
+    IpAddress clientIp = inet_ntoa((in_addr)info.sin_addr);
+    mac_addr = Helper::getMAC(&clientIp, targetIp);
+    if (mac_addr == "") {
+        mac_addr = Helper::getMAC(NULL, NULL);
+    }
+#else
+    ifreq ifr;
+    ifconf ifc;
+    char buf[1024];
+    bool success = false;
+
+    ifc.ifc_len = sizeof(buf);
+    ifc.ifc_buf = buf;
+    ioctl(socket, SIOCGIFCONF, &ifc);
+
+    ifreq* it = ifc.ifc_req;
+    const ifreq* const end = it + (ifc.ifc_len / sizeof(ifreq));
+
+    for (; it != end; ++it) {
+        strcpy(ifr.ifr_name, it->ifr_name);
+        if (ioctl(socket, SIOCGIFFLAGS, &ifr) == 0) {
+            if (! (ifr.ifr_flags & IFF_LOOPBACK)) {
+                if (ioctl(socket, SIOCGIFHWADDR, &ifr) == 0) {
+                    success = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    char* mac = (char*)malloc(17);
+    sprintf(mac, " %02x:%02x:%02x:%02x:%02x:%02x",
+        (unsigned char)ifr.ifr_hwaddr.sa_data[0],
+        (unsigned char)ifr.ifr_hwaddr.sa_data[1],
+        (unsigned char)ifr.ifr_hwaddr.sa_data[2],
+        (unsigned char)ifr.ifr_hwaddr.sa_data[3],
+        (unsigned char)ifr.ifr_hwaddr.sa_data[4],
+        (unsigned char)ifr.ifr_hwaddr.sa_data[5]);
+
+    mac_addr = mac;
+#endif
+    if (mac_addr == "")
+        mac_addr = "ERROR";
+
+    return mac_addr;
+
 }

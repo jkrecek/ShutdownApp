@@ -41,13 +41,7 @@ void PacketHandler::accepted(std::string line)
     if (command == "GET_MAC")
     {
         IpAddress serverIp = !arguments.empty() ? IpAddress(arguments.c_str()) : NULL;
-        IpAddress clientIp = inet_ntoa((in_addr)socket->getInfo().sin_addr);
-        const char * mac = Helper::getMAC(&clientIp, &serverIp);
-        if (mac == "") {
-            mac = Helper::getMAC(NULL, NULL);
-            if (mac == "")
-                mac = "ERROR";
-        }
+        const char * mac = socket->getMAC(&serverIp);
 
         socket->sendLine(mac);
         return;
