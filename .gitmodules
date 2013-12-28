@@ -1,3 +1,4 @@
 [submodule "NOSA-Server/dep/curl"]
 	path = NOSA-Server/dep/curl
 	url = git@github.com:bagder/curl.git
+	ignore = dirty
