@@ -37,12 +37,6 @@ private:
     int episode;
 };
 
-struct SeriesTitle
-{
-    //SeriesTitle(const SeriesTitle& st) : title(st.title), order(st.order), version(st.version)
-    //{}
-};
-
 class URLHandler
 {
 public:
@@ -53,7 +47,6 @@ public:
 
     std::list<EpisodeTorrent> getEztvMagnets(std::string response);
     std::list<EpisodeTorrent> getPirateBayMagnets(std::string response);
-
 };
 
 #endif // URLHANDLER_H

@@ -36,25 +36,6 @@ int RemoteCore::run()
         sConnections.insert(connection);
 
         startThread(connection);
-
-        /*std::cout << "User: " << connection->getUser() << std::endl;
-        std::cout << "Pass: " << connection->getPass() << std::endl;
-        std::cout << "type: " << connection->getType() << std::endl;*/
-
-        /*while(1)
-        {
-            const char* theRealFirstLine = connection->getSocket()->readLine();
-            std::cout << "INC MSG: " << theRealFirstLine << std::endl;
-        }*/
-
-        /*Connection con(this, socket, clientInfo);
-        if (con.getSocket() == INVALID_SOCKET)
-        {
-            std::cerr << "E: Couldn't accept connection." << std::endl;
-            break;
-        }
-
-        con.handle();*/
     } while (true);
 
     std::cout << "Ending" << std::endl;

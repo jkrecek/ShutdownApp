@@ -2,7 +2,6 @@
 #define CORE_H
 
 #include <string>
-#include <windows.h>
 #include "ipaddress.h"
 #include "servercontrol.h"
 #include "basecore.h"
@@ -16,7 +15,6 @@ public:
     ~PCCore();
 
     int run();
-
 
 private:
     int port;

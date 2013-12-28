@@ -2,8 +2,11 @@ set(TARGET_NAME NOSA-Server)
 
 set(BUILD_CURL_EXE false)
 set(BUILD_CURL_TESTS false)
-set(CURL_STATICLIB true)
-add_definitions(-DCURL_STATICLIB)
+
+if (WIN32)
+    set(CURL_STATICLIB true)
+    add_definitions(-DCURL_STATICLIB)
+endif()
 
 add_subdirectory(dep/curl)
 
@@ -22,12 +25,15 @@ add_dependencies(${TARGET_NAME} NOSA-shared)
 if(WIN32)
     set(LIBS ${LIBS} ws2_32)
     set(LIBS ${LIBS} iphlpapi)
+else()
+    set(LIBS ${LIBS} asound)
 endif()
 set(LIBS ${LIBS} libcurl)
 set(LIBS ${LIBS} NOSA-shared)
 
 target_link_libraries(${TARGET_NAME} ${LIBS})
-
-set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+if(WIN32)
+    set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+endif()
 
 install_targets(/bin ${TARGET_NAME})

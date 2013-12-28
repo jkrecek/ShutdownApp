@@ -1,6 +1,15 @@
 #include "packethandler.h"
 #include "servercontrol.h"
 #include <algorithm>
+#include <stdio.h>
+#include <stdlib.h>
+#ifndef _WIN32
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+#endif
+
+#include "helper.h"
 
 PacketHandler::PacketHandler(MainSocket *_socket)
     : socket(_socket)
@@ -61,10 +70,9 @@ void PacketHandler::accepted(std::string line)
 
     if (command == "GET_VOLUME")
     {
-        char chararray[6];
         float volume = sPCControl.getVolumeLevel();
-        snprintf (chararray, 7, "%1.4f", volume);
-        socket->sendLine(&chararray[0]);
+        const char* volumeLevel = Helper::to_string(volume).c_str();
+        socket->sendLine(volumeLevel);
 
         return;
     }
@@ -81,24 +89,14 @@ void PacketHandler::accepted(std::string line)
 std::list<EpisodeTorrent> PacketHandler::getTorrentMagnets()
 {
     URLHandler handler;
+    std::list<EpisodeTorrent> list;
+
     socket->sendLine("Start downloading page");
 
-    std::list<EpisodeTorrent> list;
-    /*std::string response = handler.loadUrl("http://eztv.it");
-    if (response.empty())
-    {
-        responseClose("Page return wrong http code");
-        return;
-    }
-
-    respond("Page downloaded, parsing links now");
-    list = handler.getEztvMagnets(response);*/
-
     std::string url_start = "http://thepiratebay.pe/user/eztv/";
-    char buffer[2];
     for (int i = 0; i < 5; ++i)
     {
-        std::string url = url_start + itoa(i, buffer, 10) + "/3";
+        std::string url = url_start + Helper::to_string(i) + "/3";
         std::string response = handler.loadUrl(url.c_str());
         if (response.empty())
             socket->sendLine("Page return wrong http code");
@@ -163,7 +161,12 @@ void PacketHandler::filterTorrents(std::vector<std::string> series, std::list<Ep
 
 void PacketHandler::runTorrents(const std::list<EpisodeTorrent> &torrents)
 {
+#ifdef _WIN32
     std::string magnetAppPath = Helper::GetSZValueUnique( HKEY_CLASSES_ROOT, "Magnet\\shell\\open\\command\\", "");
+#else
+    // TODO
+    std::string magnetAppPath = "";
+#endif
 
     for(std::list<EpisodeTorrent>::const_iterator itr = torrents.begin(); itr != torrents.end(); ++itr)
     {

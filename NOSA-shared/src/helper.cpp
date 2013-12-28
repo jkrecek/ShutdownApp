@@ -91,6 +91,7 @@ std::string Helper::GetSZValueUnique( HKEY openKey, const char* regkey, const ch
 const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NULL)
 {
     #ifndef _WIN32
+        // TODO
         return "";
     #else
     IP_ADAPTER_INFO* adapterInfo;
@@ -168,4 +169,18 @@ const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NUL
 bool Helper::iequals(const std::string& a, const std::string& b)
 {
     return a.size() == b.size() && toLowerCase(a) == toLowerCase(b);
+}
+
+std::string Helper::to_string(int val)
+{
+    char str[32];
+    sprintf(str, "%d", val);
+    return str;
+}
+
+std::string Helper::to_string(float val)
+{
+    char str[32];
+    sprintf(str, "%f", val);
+    return str;
 }

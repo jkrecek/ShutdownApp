@@ -1,15 +1,24 @@
 #ifndef SERVERCONTROL_H
 #define SERVERCONTROL_H
 
-#ifdef __MINGW32__
+#if defined(__MINGW32__) && defined(_WIN32)
   typedef void * KSJACK_DESCRIPTION;
   typedef void * KSJACK_DESCRIPTION2;
   typedef void * KSJACK_SINK_INFORMATION;
 #endif
 
 #include <string>
-#include <endpointvolume.h>
 #include "singleton.h"
+
+#ifdef _WIN32
+    #include <endpointvolume.h>
+    typedef IAudioEndpointVolume VolumeController;
+#else
+    #include <alsa/asoundlib.h>
+    #include <alsa/mixer.h>
+    typedef snd_mixer_elem_t VolumeController;
+#endif
+
 
 enum Command {
     NONE,
@@ -31,9 +40,9 @@ public:
     void setVolumeLevel(float volumeLevel);
 
 private:
-    IAudioEndpointVolume* getAudioEndpoint();
+    VolumeController* getVolumeController();
 
-    IAudioEndpointVolume* audioEndpoint;
+    VolumeController* volumeController;
 
 };
 

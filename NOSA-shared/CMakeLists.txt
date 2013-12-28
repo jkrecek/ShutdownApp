@@ -8,6 +8,8 @@ add_library(${TARGET_NAME} STATIC ${SRC_LIST})
 if(WIN32)
     set(LIBS ${LIBS} ws2_32)
     set(LIBS ${LIBS} iphlpapi)
+else()
+    set(LIBS ${LIBS} pthread)
 endif()
 
 target_link_libraries(${TARGET_NAME} ${LIBS})

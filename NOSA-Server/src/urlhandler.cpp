@@ -190,7 +190,7 @@ EpisodeTorrent::EpisodeTorrent(std::string name, std::string _magnet)
 
 bool EpisodeTorrent::isSameEpisode(const EpisodeTorrent &episodeTorrent)
 {
-    return !strcasecmp(title.c_str(), episodeTorrent.title.c_str()) &&
+    return Helper::iequals(title, episodeTorrent.title) &&
             episode == episodeTorrent.episode &&
             season == episodeTorrent.season;
 }

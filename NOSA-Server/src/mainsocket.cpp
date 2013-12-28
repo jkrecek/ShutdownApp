@@ -1,6 +1,11 @@
 #include "mainsocket.h"
 #include <iostream>
 #include <ctime>
+#ifndef _WIN32
+    #include <netdb.h>
+    #include <stdio.h>
+    #include <string.h>
+#endif
 
 
 MainSocket::MainSocket(TCPSocket socket, sockaddr_in info)

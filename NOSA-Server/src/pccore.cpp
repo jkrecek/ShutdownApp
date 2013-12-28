@@ -27,11 +27,10 @@ int PCCore::run()
     if (!socket)
         return -1;
 
-
-
     do
     {
         std::string line = socket->readLine();
+        handler->accepted(line);
 
     } while (true);
 
