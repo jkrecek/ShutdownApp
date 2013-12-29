@@ -44,6 +44,7 @@ std::string NetworkSocket::readLine()
 
     size = recv(socket, buffer, BUFFER_SIZE - 1, 0);
     line.append(findLineInBuffer());
+    std::cout << "RCV[" << getSocketId() << "]: `" << line << "`" << std::endl;
     return line.c_str();
 }
 
@@ -91,6 +92,7 @@ void NetworkSocket::send(const char* message)
         errMsg = errMsg.substr(0, errMsg.size() - 1);
         std::cout << "W: Could not send data: `" << errMsg << "`" << std::endl;
     }
+    std::cout << "SND[" << getSocketId() << "]: `" << Helper::stripNewLine(message) << "`" << std::endl;
 }
 
 void NetworkSocket::close()

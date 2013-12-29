@@ -16,9 +16,8 @@ StringVector &Helper::split(const std::string &s, char delim, StringVector &elem
     std::stringstream ss(s);
     std::string item;
     while (std::getline(ss, item, delim))
-    {
         elems.push_back(item);
-    }
+
     return elems;
 }
 
@@ -156,7 +155,7 @@ const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NUL
         }
     }
 
-    free(adapterInfo);
+    delete adapterInfo;
     return mac_addr;
 }
 #endif
@@ -178,4 +177,20 @@ std::string Helper::to_string(float val)
     char str[32];
     sprintf(str, "%f", val);
     return str;
+}
+
+const char* Helper::stripNewLine(const char* ori)
+{
+    if (ori[strlen(ori)-1] == '\n')
+    {
+    #ifdef _WIN32
+        char* res = strdup(ori);
+        res[strlen(res)-1] = 0;
+        return res;
+    #else
+        return strndup(ori, strlen(ori)-1);
+    #endif
+    }
+
+    return ori;
 }
