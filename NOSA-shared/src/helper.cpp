@@ -145,14 +145,15 @@ const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NUL
 
         } while (pAdapterInfo = pAdapterInfo->Next);
 
-        if (candidate)
-        {
-            mac_addr = (char*)malloc(MAC_SIZE);
-            _snprintf_s(mac_addr, _TRUNCATE, MAC_SIZE, "%02X:%02X:%02X:%02X:%02X:%02X",
-                candidate->Address[0], candidate->Address[1],
-                candidate->Address[2], candidate->Address[3],
-                candidate->Address[4], candidate->Address[5]);
-        }
+        if (!candidate)
+            return NULL;
+
+        mac_addr = (char*)malloc(MAC_SIZE);
+        _snprintf_s(mac_addr, _TRUNCATE, MAC_SIZE, "%02X:%02X:%02X:%02X:%02X:%02X",
+            candidate->Address[0], candidate->Address[1],
+            candidate->Address[2], candidate->Address[3],
+            candidate->Address[4], candidate->Address[5]);
+
     }
 
     delete adapterInfo;

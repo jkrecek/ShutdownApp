@@ -127,9 +127,9 @@ const char* NetworkSocket::getMAC(IpAddress *targetIp)
 #ifdef _WIN32
     IpAddress clientIp = inet_ntoa((in_addr)info.sin_addr);
     mac_addr = Helper::getMAC(&clientIp, targetIp);
-    if (mac_addr == "") {
+
+    if (!mac_addr)
         mac_addr = Helper::getMAC(NULL, NULL);
-    }
 #else
     ifreq ifr;
     ifconf ifc;
@@ -166,7 +166,7 @@ const char* NetworkSocket::getMAC(IpAddress *targetIp)
 
     mac_addr = mac;
 #endif
-    if (mac_addr == "")
+    if (!mac_addr)
         mac_addr = "ERROR";
 
     return mac_addr;
