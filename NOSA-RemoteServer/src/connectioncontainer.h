@@ -8,27 +8,25 @@
 
 //typedef  ConnectionIterator;
 
+typedef std::vector<BaseConnection*> ConnectionVector;
+
 class ConnectionContainer
 {
 public:
     class iterator
     {
     public:
+        iterator(ConnectionVector** vector);
         void next();
         bool hasMore();
         BaseConnection* get();
 
-    /*private:*/
-        std::vector<BaseConnection*>::iterator startItr;
-        std::vector<BaseConnection*>::iterator a2;
-        std::vector<BaseConnection*>::iterator b1;
-        std::vector<BaseConnection*>::iterator endItr;
-        std::vector<BaseConnection*>::iterator current;
+    private:
+        ConnectionVector** vector;
+        ConnectionVector::iterator current;
     };
 
-    friend class iterator;
-
-    ConnectionContainer();
+    ConnectionContainer() {}
 
     iterator begin();
 
@@ -38,8 +36,7 @@ public:
     std::vector<AndroidConnection*> getAndroidConnections(PCConnection* con);
 
 private:
-    std::vector<AndroidConnection*> containerAndroid;
-    std::vector<PCConnection*> containerPC;
+    ConnectionVector container[TYPE_COUNT];
 };
 
 #define sConnections Singleton<ConnectionContainer>::getInstance()

@@ -1,22 +1,20 @@
 #include "connectioncontainer.h"
 
-ConnectionContainer::ConnectionContainer()
+ConnectionContainer::iterator::iterator(ConnectionVector **_vector)
+    : vector(_vector)
 {
-    for(ConnectionContainer::iterator itr = this->begin(); itr.hasMore(); itr.next())
-    {
-
-    }
+    current = (*vector)[TYPE_ANDROID].begin();
 }
 
 void ConnectionContainer::iterator::next()
 {
-    if (++current == a2)
-        current = b1;
+    if (++current == (*vector)[TYPE_ANDROID].end())
+        current = (*vector)[TYPE_PC].begin();
 }
 
 bool ConnectionContainer::iterator::hasMore()
 {
-    return current != endItr;
+    return current != (*vector)[TYPE_PC].end();
 }
 
 BaseConnection* ConnectionContainer::iterator::get()
@@ -26,41 +24,31 @@ BaseConnection* ConnectionContainer::iterator::get()
 
 ConnectionContainer::iterator ConnectionContainer::begin()
 {
-    iterator itr;
-    itr.startItr = ((std::vector<BaseConnection*>&)containerAndroid).begin();
-    itr.a2 = ((std::vector<BaseConnection*>&)containerAndroid).end();
-    itr.b1 = ((std::vector<BaseConnection*>&)containerPC).begin();
-    itr.endItr = ((std::vector<BaseConnection*>&)containerPC).end();
-
-    itr.current = itr.startItr;
-    return itr;
+    return iterator((ConnectionVector**)&container);
 }
 
 void ConnectionContainer::insert(BaseConnection* connection)
 {
-    if (connection->getType() == TYPE_ANDROID)
-        containerAndroid.push_back((AndroidConnection*)connection);
-    else if (connection->getType() == TYPE_PC)
-        containerPC.push_back((PCConnection*)connection);
+    if (connection->getType() != TYPE_COUNT)
+        container[connection->getType()].push_back(connection);
 }
 
 
 PCConnection* ConnectionContainer::getPCConnection(AndroidConnection* con)
 {
-    for (std::vector<PCConnection*>::iterator itr = containerPC.begin(); itr != containerPC.end(); ++itr)
+    for (ConnectionVector::iterator itr = container[TYPE_PC].begin(); itr != container[TYPE_PC].end(); ++itr)
         if (con->getUser() == (*itr)->getUser() && con->getPass() == (*itr)->getPass())
-            return *itr;
+            return (PCConnection*)*itr;
 }
 
 std::vector<AndroidConnection*> ConnectionContainer::getAndroidConnections(PCConnection* con)
 {
     std::vector<AndroidConnection*> vector;
-    for (std::vector<AndroidConnection*>::iterator itr = containerAndroid.begin(); itr != containerAndroid.end(); ++itr)
-    {
+    for (ConnectionVector::iterator itr = container[TYPE_ANDROID].begin(); itr != container[TYPE_ANDROID].end(); ++itr)
         if (con->getUser() == (*itr)->getUser() && con->getPass() == (*itr)->getPass())
-            vector.push_back(*itr);
-    }
+            vector.push_back((AndroidConnection*)*itr);
 
     return vector;
+}
 
 }
