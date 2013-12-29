@@ -41,7 +41,7 @@ public:
 
     std::string safeResponseFromat(std::string message, bool appendNewLine);
 
-    bool isOpen() { return opened; }
+    bool isOpen() { return socket > 0; }
     int getSocketId() { return socket; }
     TCPSocket getSocket() { return socket; }
     const sockaddr_in& getInfo() const  { return info; }
@@ -60,8 +60,6 @@ protected:
 
     char* buffer;
     int size;
-
-    bool opened;
 };
 
 #endif // TCPSOCKET_H

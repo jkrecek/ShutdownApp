@@ -16,6 +16,8 @@ public:
 
     int run();
 
+    bool socketCreated() { return socket; }
+
 private:
     int port;
     bool initialized;

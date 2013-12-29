@@ -29,6 +29,8 @@ public:
 
     static void startThread(BaseConnection* connection);
 
+    bool socketCreated() { return server; }
+
 private:
     ServerSocket* server;
 };

@@ -1,6 +1,7 @@
 #include "pccore.h"
 #include <iostream>
 #include "helper.h"
+#include "socketclosedexception.h"
 
 PCCore::PCCore(int _port)
     : BaseCore(), port(_port), socket(NULL), handler(NULL)
@@ -19,23 +20,23 @@ PCCore::PCCore(int _port)
 
 PCCore::~PCCore()
 {
-
+    delete socket;
 }
 
 int PCCore::run()
 {
-    if (!socket)
-        return -1;
-
-    do
+    try
     {
-        std::string line = socket->readLine();
-        handler->accepted(line);
-
-    } while (true);
-
-    std::cout << "Ending" << std::endl;
-    socket->close();
+        while(socket->isOpen())
+        {
+            std::string line = socket->readLine();
+            handler->accepted(line);
+        }
+    }
+    catch(SocketClosedException& /*e*/)
+    {
+        // just interrupt
+    }
 
     return 0;
 }

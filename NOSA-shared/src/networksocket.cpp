@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <stdlib.h>
+#include "socketclosedexception.h"
 
 #ifdef _WIN32
     #include <winsock.h>
@@ -21,14 +22,14 @@
 #endif
 
 NetworkSocket::NetworkSocket(TCPSocket _socket, sockaddr_in _info)
-    : socket(_socket), info(_info), size(0), opened(true)
+    : socket(_socket), info(_info), size(0)
 {
     buffer = (char*) malloc (BUFFER_SIZE);
 }
 
 NetworkSocket::~NetworkSocket()
 {
-    close();
+    doClose();
 }
 
 std::string NetworkSocket::readLine()
@@ -43,9 +44,12 @@ std::string NetworkSocket::readLine()
     }
 
     size = recv(socket, buffer, BUFFER_SIZE - 1, 0);
+    if (size == -1)
+        throw SocketClosedException();
+
     line.append(findLineInBuffer());
     std::cout << "RCV[" << getSocketId() << "]: `" << line << "`" << std::endl;
-    return line.c_str();
+    return line;
 }
 
 
@@ -60,8 +64,10 @@ std::string NetworkSocket::findLineInBuffer()
             buffer = end + 1;
             return res.c_str();
         }
-    } else
-        std::cout << "Wrong size when reading from buffer! (" << size << ")" << std::endl;
+    } else {
+        std::cout << "ERCV[" << getSocketId() << "]: `" << size << "`" << std::endl;
+        socket = -1;
+    }
 
     return std::string();
 }
@@ -97,19 +103,20 @@ void NetworkSocket::send(const char* message)
 
 void NetworkSocket::close()
 {
-    const char* closeStr = "CLOSE\n";
-    ::send(socket, closeStr, strlen(closeStr)+1, 0);
+    sendLine("CLOSE");
     doClose();
 }
 
 void NetworkSocket::doClose()
 {
+    std::cout << "Closing socket: " << getSocketId() << std::endl;
+    shutdown(socket, 0);
 #ifdef _WIN32
     closesocket(socket);
 #else
     ::close(socket);
 #endif
-    opened = false;
+    socket = 0;
 }
 
 std::string NetworkSocket::safeResponseFromat(std::string message, bool appendNewLine)

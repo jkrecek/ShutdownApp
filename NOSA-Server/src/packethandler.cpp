@@ -28,8 +28,6 @@ void PacketHandler::accepted(std::string line)
         arguments = line.substr(firstSpace);
     }
 
-    std::cout << "I: Incoming command: '" << command << "'" << std::endl;
-
     Command controlCommand = sPCControl.getCommand(command);
     if (controlCommand != NONE)
     {
@@ -42,7 +40,6 @@ void PacketHandler::accepted(std::string line)
     {
         IpAddress serverIp = !arguments.empty() ? IpAddress(arguments.c_str()) : NULL;
         const char * mac = socket->getMAC(&serverIp);
-
         socket->sendLine(mac);
         return;
     }

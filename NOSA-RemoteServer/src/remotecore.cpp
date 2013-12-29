@@ -3,6 +3,7 @@
 #include "helper.h"
 #include "connectioncontainer.h"
 #include <unistd.h>
+#include "socketclosedexception.h"
 
 #ifndef _WIN32
     #include <pthread.h>
@@ -29,20 +30,24 @@ RemoteCore::~RemoteCore()
 
 int RemoteCore::run()
 {
-    if (!server)
-        return -1;
-
-    do
+    BaseConnection* connection = NULL;
+    while (server && server->isOpen())
     {
         NetworkSocket* socket = server->acceptConnection();
-        BaseConnection* connection = BaseConnection::estabilishConnection(socket);
+        try
+        {
+            connection = BaseConnection::estabilishConnection(socket);
+        }
+        catch (SocketClosedException& /*e*/)
+        {
+            std::cout << "Exception occured in estabilishing connection. Socket is beeing closed." << std::endl;
+            socket->close();
+        }
+
         sConnections.insert(connection);
 
         startThread(connection);
-    } while (true);
-
-    std::cout << "Ending" << std::endl;
-    server->close();
+    }
 
     return 0;
 }
@@ -61,6 +66,7 @@ THREAD_RETURN_TYPE RemoteCore::handleConnection(void* data)
 {
     BaseConnection* connection = static_cast<BaseConnection*>(data);
     connection->read();
+    delete connection;
     endThread();
 }
 

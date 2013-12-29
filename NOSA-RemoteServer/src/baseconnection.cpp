@@ -2,6 +2,7 @@
 #include "androidconnection.h"
 #include "pcconnection.h"
 #include "helper.h"
+#include "socketclosedexception.h"
 
 #include <iostream>
 
@@ -12,6 +13,8 @@ BaseConnection::BaseConnection(NetworkSocket *_socket, ConnectionType _type)
 
 BaseConnection::~BaseConnection()
 {
+    // TODO
+    /*delete from connections*/
     delete socket;
 }
 
@@ -46,19 +49,24 @@ BaseConnection* BaseConnection::estabilishConnection(NetworkSocket *socket)
 
 void BaseConnection::read()
 {
-    while(socket)
+    try
     {
-        std::string line = socket->readLine();
-        if (line.empty())
-            continue;
-
-        if (line == "CLOSE")
+        while(socket && socket->isOpen())
         {
-            delete socket;
-            socket = NULL;
-            continue;
-        }
+            std::string line = socket->readLine();
 
-        redistributeLine(line);
+            if (line.empty())
+                continue;
+
+            if (line == "CLOSE")
+                break;
+
+            redistributeLine(line);
+        }
     }
+    catch (SocketClosedException& /*e*/)
+    {
+        // handle post
+    }
+
 }
