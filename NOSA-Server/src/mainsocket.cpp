@@ -43,5 +43,8 @@ MainSocket* MainSocket::createSocket(std::string hostname, int port)
         return NULL;
     }
 
-    return new MainSocket(baseSocket, sockInfo);
+
+    MainSocket* sock = new MainSocket(baseSocket, sockInfo);
+    sock->sendLine("type=PC user=frca pass=superdupr");
+    return sock;
 }
