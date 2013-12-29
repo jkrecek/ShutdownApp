@@ -3,6 +3,7 @@
 #include "pcconnection.h"
 #include "helper.h"
 #include "socketclosedexception.h"
+#include "connectioncontainer.h"
 
 #include <iostream>
 
@@ -13,8 +14,7 @@ BaseConnection::BaseConnection(NetworkSocket *_socket, ConnectionType _type)
 
 BaseConnection::~BaseConnection()
 {
-    // TODO
-    /*delete from connections*/
+    sConnections.remote(this);
     delete socket;
 }
 

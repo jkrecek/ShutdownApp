@@ -51,4 +51,14 @@ std::vector<AndroidConnection*> ConnectionContainer::getAndroidConnections(PCCon
     return vector;
 }
 
+void ConnectionContainer::remote(BaseConnection* connection)
+{
+    ConnectionVector& relatedVector = container[connection->getType()];
+    for (ConnectionVector::iterator itr = relatedVector.begin(); itr != relatedVector.end(); )
+    {
+        if (*itr == connection)
+            itr = relatedVector.erase(itr);
+        else
+            ++itr;
+    }
 }
