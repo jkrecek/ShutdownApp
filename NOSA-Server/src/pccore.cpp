@@ -33,10 +33,7 @@ int PCCore::run()
             handler->accepted(line);
         }
     }
-    catch(SocketClosedException& /*e*/)
-    {
-        // just interrupt
-    }
+    catch (SocketClosedException& /*e*/) { /* just interrupt */ }
 
     return 0;
 }

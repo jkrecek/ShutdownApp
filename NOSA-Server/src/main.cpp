@@ -20,7 +20,6 @@ int main()
             std::cout << "Next connection attempt will be in " << RETRY_DELAY << " seconds" << std::endl;
             sleep(RETRY_DELAY);
         }
-
     }
 
     return result;

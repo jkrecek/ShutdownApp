@@ -64,9 +64,5 @@ void BaseConnection::read()
             redistributeLine(line);
         }
     }
-    catch (SocketClosedException& /*e*/)
-    {
-        // handle post
-    }
-
+    catch (SocketClosedException& /*e*/) { /* just interrupt */ }
 }

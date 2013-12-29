@@ -5,8 +5,9 @@
 
 enum ConnectionType
 {
-    TYPE_ANDROID,
-    TYPE_PC
+    TYPE_ANDROID = 0,
+    TYPE_PC,
+    TYPE_COUNT
 };
 
 class BaseConnection

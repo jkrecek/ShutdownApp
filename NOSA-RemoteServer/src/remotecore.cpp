@@ -42,6 +42,7 @@ int RemoteCore::run()
         {
             std::cout << "Exception occured in estabilishing connection. Socket is beeing closed." << std::endl;
             socket->close();
+            continue;
         }
 
         sConnections.insert(connection);
