@@ -6,7 +6,6 @@
 int main()
 {
     int result = 0;
-    sleep(15);
     LOOP_LINE
     {
         PCCore core(SOCKET_PORT);
