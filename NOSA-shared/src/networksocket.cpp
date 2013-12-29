@@ -35,7 +35,7 @@ NetworkSocket::~NetworkSocket()
 std::string NetworkSocket::readLine()
 {
     std::string line;
-    if (size)
+    if (size > 0)
     {
         line = findLineInBuffer();
         const char* l = line.c_str();
@@ -44,7 +44,7 @@ std::string NetworkSocket::readLine()
     }
 
     size = recv(socket, buffer, BUFFER_SIZE - 1, 0);
-    if (size == -1)
+    if (size <= 0)
         throw SocketClosedException();
 
     line.append(findLineInBuffer());
@@ -55,18 +55,12 @@ std::string NetworkSocket::readLine()
 
 std::string NetworkSocket::findLineInBuffer()
 {
-    if (size > 0)
+    if (char* end = (char*)memchr(buffer, '\n', size))
     {
-        if (char* end = (char*)memchr(buffer, '\n', size))
-        {
-            std::string res = std::string(buffer, end - buffer);
-            size -= end - buffer + 1;
-            buffer = end + 1;
-            return res.c_str();
-        }
-    } else {
-        std::cout << "ERCV[" << getSocketId() << "]: `" << size << "`" << std::endl;
-        socket = -1;
+        std::string res = std::string(buffer, end - buffer);
+        size -= end - buffer + 1;
+        buffer = end + 1;
+        return res.c_str();
     }
 
     return std::string();
