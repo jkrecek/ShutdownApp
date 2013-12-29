@@ -72,7 +72,7 @@ void PacketHandler::accepted(std::string line)
     {
         float value = atof(arguments.c_str());
         sPCControl.setVolumeLevel(value);
-        socket->sendLine("OK");
+        //socket->sendLine("OK");
         return;
     }
 }
