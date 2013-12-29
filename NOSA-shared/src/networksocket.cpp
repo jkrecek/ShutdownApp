@@ -50,14 +50,17 @@ std::string NetworkSocket::readLine()
 
 std::string NetworkSocket::findLineInBuffer()
 {
-    std::string res;
-    if (char* end = (char*)memchr(buffer, '\n', size))
+    if (size > 0)
     {
-        res = std::string(buffer, end - buffer);
-        size -= end - buffer + 1;
-        buffer = end + 1;
-        return res.c_str();
-    }
+        if (char* end = (char*)memchr(buffer, '\n', size))
+        {
+            std::string res = std::string(buffer, end - buffer);
+            size -= end - buffer + 1;
+            buffer = end + 1;
+            return res.c_str();
+        }
+    } else
+        std::cout << "Wrong size when reading from buffer! (" << size << ")" << std::endl;
 
     return std::string();
 }
@@ -101,9 +104,7 @@ void NetworkSocket::doClose()
 {
 #ifdef _WIN32
     closesocket(socket);
-    //freeaddrinfo((sockaddr*)&info);
 #else
-    freeaddrinfo((addrinfo*)&info);
     ::close(socket);
 #endif
     opened = false;

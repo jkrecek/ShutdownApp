@@ -21,7 +21,11 @@ RemoteCore::RemoteCore(int port)
 
 RemoteCore::~RemoteCore()
 {
+    for(ConnectionContainer::iterator itr = sConnections.begin(); itr.hasMore(); itr.next())
+        itr.get()->getSocket()->close();
 
+    if (server)
+        server->close();
 }
 
 int RemoteCore::run()
@@ -49,7 +53,8 @@ void RemoteCore::startThread(BaseConnection *connection)
 #ifdef _WIN32
     _beginthreadex(NULL, 0, RemoteCore::handleConnection, connection, 0, NULL);
 #else
-    pthread_create(NULL, NULL, RemoteCore::handleConnection, connection);
+    pthread_t t;
+    pthread_create(&t, NULL, RemoteCore::handleConnection, connection);
 #endif
 }
 

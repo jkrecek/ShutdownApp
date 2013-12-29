@@ -9,7 +9,7 @@ PCCore::PCCore(int _port)
     if (!prepareSockets())
         return;
 
-    socket = MainSocket::createSocket("10.0.0.44", port);
+    socket = MainSocket::createSocket("54.194.29.200", port);
     if (socket)
     {
         std::cout << "Connected" << std::endl;
