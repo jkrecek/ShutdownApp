@@ -3,6 +3,7 @@
 
 #include "helper.h"
 #include "nvmap.h"
+#include "packet.h"
 
 #define BUFFER_SIZE 1000
 
@@ -32,14 +33,10 @@ public:
     NetworkSocket(TCPSocket socket, sockaddr_in info);
     ~NetworkSocket();
 
-    std::string readLine();
+    Packet* readPacket();
     NVMap parsePacket(std::string line);
 
-    void sendLine(const char* line);
-
     void close();
-
-    std::string safeResponseFromat(std::string message, bool appendNewLine);
 
     bool isOpen() { return socket > 0; }
     int getSocketId() { return socket; }
@@ -47,18 +44,18 @@ public:
     const sockaddr_in& getInfo() const  { return info; }
 
     const char* getMAC(IpAddress* targetIp);
+    void send(Packet* packet);
+    void sendMsg(const char* message);
 
 protected:
-    std::string findLineInBuffer();
-
-    void send(const char* message);
-
+    char* readLine();
+    char* readBuffer();
     void doClose();
 
     TCPSocket socket;
     sockaddr_in info;
-
-    char* buffer;
+    char buffer[BUFFER_SIZE];
+    char* bufferPtr;
     int size;
 };
 

@@ -195,3 +195,15 @@ const char* Helper::stripNewLine(const char* ori)
 
     return ori;
 }
+
+void Helper::printBytes(char **bytes, unsigned printMax)
+{
+    if (!printMax)
+        printMax = strlen(*bytes);
+
+    std::cout << "Len: " << strlen(*bytes) << ", bytes: ";
+    for (int i = 0; i < printMax; ++i)
+        std::cout << (int) (*bytes)[i] << " ";
+
+    std::cout << std::endl;
+}

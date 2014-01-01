@@ -5,10 +5,12 @@
 #include <iostream>
 #include <stdlib.h>
 #include "socketclosedexception.h"
+#include "packet.h"
 
 #ifdef _WIN32
     #include <winsock.h>
-    #include <windows.h>
+    typedef __int32 int32_t;
+    typedef unsigned __int32 uint32_t;
 #else
     #include <sys/types.h>
     #include <sys/socket.h>
@@ -19,12 +21,13 @@
     #include <unistd.h>
     #include <netinet/in.h>
     #include <string.h>
+    #include <arpa/inet.h>
 #endif
 
 NetworkSocket::NetworkSocket(TCPSocket _socket, sockaddr_in _info)
-    : socket(_socket), info(_info), size(0)
+    : socket(_socket), info(_info), size(0), bufferPtr(buffer)
 {
-    buffer = (char*) malloc (BUFFER_SIZE);
+
 }
 
 NetworkSocket::~NetworkSocket()
@@ -32,38 +35,59 @@ NetworkSocket::~NetworkSocket()
     doClose();
 }
 
-std::string NetworkSocket::readLine()
+Packet* NetworkSocket::readPacket()
 {
-    std::string line;
+    char* bytes = readLine();
+    Packet* packet = Packet::fromBytes(bytes);
+    std::cout << "RCV[" << getSocketId() << "]: `" << packet->getMessage() << "`" << std::endl;
+    return packet;
+}
+
+char* NetworkSocket::readLine()
+{
+    char* line = NULL;
     if (size > 0)
     {
-        line = findLineInBuffer();
-        const char* l = line.c_str();
-        if (size || l[strlen(l)-1] == '\n')
-            return l;
-    }
+        line = readBuffer();
+        if (size || line[strlen(line)-1] == '\n')
+            return line;
+    } else
+        bufferPtr = buffer;
 
-    size = recv(socket, buffer, BUFFER_SIZE - 1, 0);
+    size = recv(socket, bufferPtr, BUFFER_SIZE - 1, 0);
     if (size <= 0)
         throw SocketClosedException();
 
-    line.append(findLineInBuffer());
-    std::cout << "RCV[" << getSocketId() << "]: `" << line << "`" << std::endl;
+    char* rest = readBuffer();
+    if (!rest)
+        return NULL;
+
+    if (line == NULL)
+        line = rest;
+    else
+    {
+        std::vector<char> v;
+        v.insert(v.end(), line, line + strlen(line));
+        v.insert(v.end(), rest, rest + strlen(rest));
+        line = v.data();
+    }
+
     return line;
 }
 
-
-std::string NetworkSocket::findLineInBuffer()
+char* NetworkSocket::readBuffer()
 {
-    if (char* end = (char*)memchr(buffer, '\n', size))
-    {
-        std::string res = std::string(buffer, end - buffer);
-        size -= end - buffer + 1;
-        buffer = end + 1;
-        return res.c_str();
-    }
+    char* end;
+    if (!(end = (char*)memchr(bufferPtr, '\n', size)))
+        return NULL;
 
-    return std::string();
+    unsigned len = end - bufferPtr;
+    char* res = (char*)malloc(len + 1);
+    memcpy(res, bufferPtr, len);
+    res[len] = 0;
+    size -= len + 2;
+    bufferPtr = end + 1;
+    return res;
 }
 
 NVMap NetworkSocket::parsePacket(std::string line)
@@ -74,30 +98,25 @@ NVMap NetworkSocket::parsePacket(std::string line)
     return nvmap;
 }
 
-void NetworkSocket::sendLine(const char* line)
+void NetworkSocket::send(Packet* packet)
 {
-    bool hasNewLine = line[strlen(line)-1] == '\n';
-    send(safeResponseFromat(line, !hasNewLine).c_str());
+    size_t size;
+    if ((size = ::send(socket, packet->toBytes(), packet->getSize(), 0)) == SOCKET_ERROR)
+        std::cout << "W: Could not send data: `" << packet->getMessage() << "`" << std::endl;
+    else
+        std::cout << "SND[" << getSocketId() << "]: `" << packet->getMessage() << "`" << std::endl;
+
+    delete packet;
 }
 
-void NetworkSocket::send(const char* message)
+void NetworkSocket::sendMsg(const char *message)
 {
-    if (!message || !strlen(message))
-        return;
-
-    size_t size;
-    if ((size = ::send(socket, message, strlen(message), 0)) == SOCKET_ERROR)
-    {
-        std::string errMsg = message;
-        errMsg = errMsg.substr(0, errMsg.size() - 1);
-        std::cout << "W: Could not send data: `" << errMsg << "`" << std::endl;
-    }
-    std::cout << "SND[" << getSocketId() << "]: `" << Helper::stripNewLine(message) << "`" << std::endl;
+    send(new Packet(0, message));
 }
 
 void NetworkSocket::close()
 {
-    sendLine("CLOSE");
+    sendMsg("CLOSE");
     doClose();
 }
 
@@ -111,15 +130,6 @@ void NetworkSocket::doClose()
     ::close(socket);
 #endif
     socket = 0;
-}
-
-std::string NetworkSocket::safeResponseFromat(std::string message, bool appendNewLine)
-{
-    message = Helper::replace(message, "\n", "\\n");
-    if (appendNewLine)
-        message += "\n";
-
-    return message;
 }
 
 const char* NetworkSocket::getMAC(IpAddress *targetIp)

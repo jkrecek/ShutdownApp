@@ -8,14 +8,17 @@ PCConnection::PCConnection(NetworkSocket* _socket)
 }
 
 
-void PCConnection::redistributeLine(std::string line)
+void PCConnection::redistributePacket(Packet *packet)
 {
+    // TODO
+    // rewrite request id handling
+
     std::vector<AndroidConnection*> conns = sConnections.getAndroidConnections(this);
     if (conns.empty())
         return;
 
     for (std::vector<AndroidConnection*>::iterator itr = conns.begin(); itr != conns.end(); ++itr)
     {
-        (*itr)->getSocket()->sendLine(line.c_str());
+        (*itr)->getSocket()->send(packet);
     }
 }

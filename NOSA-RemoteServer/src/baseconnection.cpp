@@ -20,9 +20,9 @@ BaseConnection::~BaseConnection()
 
 BaseConnection* BaseConnection::estabilishConnection(NetworkSocket *socket)
 {
-    std::string line = socket->readLine();
+    Packet* packet = socket->readPacket();
 
-    NVMap parameters = socket->parsePacket(line);
+    NVMap parameters = socket->parsePacket(packet->getMessage());
     if (!parameters.contains("type") ||
         !parameters.contains("user") ||
         !parameters.contains("pass"))
@@ -43,26 +43,32 @@ BaseConnection* BaseConnection::estabilishConnection(NetworkSocket *socket)
 
     connection->user = parameters.get("user");
     connection->pass = parameters.get("pass");
+
+    delete packet;
     return connection;
 
 }
 
 void BaseConnection::read()
 {
+    Packet* packet;
     try
     {
         while(socket && socket->isOpen())
         {
-            std::string line = socket->readLine();
+            packet = socket->readPacket();
 
-            if (line.empty())
+            if (!packet)
                 continue;
 
-            if (line == "CLOSE")
+            if (packet->getMessage() == "CLOSE")
                 break;
 
-            redistributeLine(line);
+            redistributePacket(packet);
+            delete packet;
         }
     }
     catch (SocketClosedException& /*e*/) { /* just interrupt */ }
+
+    delete packet;
 }

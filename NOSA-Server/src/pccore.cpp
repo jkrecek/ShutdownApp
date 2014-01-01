@@ -25,15 +25,19 @@ PCCore::~PCCore()
 
 int PCCore::run()
 {
+    Packet* packet;
     try
     {
         while(socket->isOpen())
         {
-            std::string line = socket->readLine();
-            handler->accepted(line);
+            packet = socket->readPacket();
+            handler->accepted(packet);
+            delete packet;
         }
     }
     catch (SocketClosedException& /*e*/) { /* just interrupt */ }
+
+    delete packet;
 
     return 0;
 }

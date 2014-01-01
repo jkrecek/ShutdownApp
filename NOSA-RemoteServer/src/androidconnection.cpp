@@ -8,8 +8,11 @@ AndroidConnection::AndroidConnection(NetworkSocket* _socket)
 
 }
 
-void AndroidConnection::redistributeLine(std::string line)
+void AndroidConnection::redistributePacket(Packet *packet)
 {
+    // TODO
+    // rewrite request id handling
+
     if (PCConnection* conn = sConnections.getPCConnection(this))
-        conn->getSocket()->sendLine(line.c_str());
+        conn->getSocket()->send(packet);
 }

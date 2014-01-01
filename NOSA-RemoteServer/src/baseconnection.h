@@ -2,6 +2,7 @@
 #define BASECONNECTION_H
 
 #include "networksocket.h"
+#include "packet.h"
 
 enum ConnectionType
 {
@@ -24,7 +25,7 @@ public:
 
     void read();
 
-    virtual void redistributeLine(std::string line) = 0;
+    virtual void redistributePacket(Packet* packet) = 0;
 
 protected:
     BaseConnection(NetworkSocket* _socket, ConnectionType type);

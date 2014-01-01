@@ -8,7 +8,7 @@ class AndroidConnection : public BaseConnection
 public:
     AndroidConnection(NetworkSocket* _socket);
 
-    void redistributeLine(std::string line);
+    void redistributePacket(Packet* packet);
 };
 
 #endif // ANDROIDCONNECTION_H

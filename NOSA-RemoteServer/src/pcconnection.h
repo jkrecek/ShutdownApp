@@ -8,7 +8,7 @@ class PCConnection : public BaseConnection
 public:
     PCConnection(NetworkSocket* _socket);
 
-    void redistributeLine(std::string line);
+    void redistributePacket(Packet* packet);
 };
 
 #endif // PCCONNECTION_H

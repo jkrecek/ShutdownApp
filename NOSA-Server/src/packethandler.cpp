@@ -3,21 +3,23 @@
 #include <algorithm>
 #include <stdio.h>
 #include <stdlib.h>
+#include "helper.h"
 #ifndef _WIN32
     #include <sys/socket.h>
     #include <netinet/in.h>
     #include <arpa/inet.h>
 #endif
 
-#include "helper.h"
+
 
 PacketHandler::PacketHandler(MainSocket *_socket)
     : socket(_socket)
 {
 }
 
-void PacketHandler::accepted(std::string line)
+void PacketHandler::accepted(Packet *packet)
 {
+    std::string line = packet->getMessage();
     std::size_t firstSpace = line.find(" ");
     std::string command , arguments;
     if (firstSpace == std::string::npos)
@@ -32,7 +34,7 @@ void PacketHandler::accepted(std::string line)
     if (controlCommand != NONE)
     {
         const char* result = sPCControl.execute(controlCommand);
-        socket->sendLine(result);
+        socket->send(packet->responsePacket(result));
         return;
     }
 
@@ -40,22 +42,22 @@ void PacketHandler::accepted(std::string line)
     {
         IpAddress serverIp = !arguments.empty() ? IpAddress(arguments.c_str()) : NULL;
         const char * mac = socket->getMAC(&serverIp);
-        socket->sendLine(mac);
+        socket->send(packet->responsePacket(mac));
         return;
     }
 
     if (command == "TORRENT")
     {
         std::vector<std::string> series = getArgsByQuotation(arguments, true);
-        std::list<EpisodeTorrent> torrents = getTorrentMagnets();
+        std::list<EpisodeTorrent> torrents = getTorrentMagnets(packet);
 
         filterTorrents(series, torrents);
 
-        socket->sendLine("Torrents filtered, running magnet links");
+        socket->send(packet->responsePacket("Torrents filtered, running magnet links"));
 
         runTorrents(torrents);
 
-        socket->sendLine("Done");
+        socket->send(packet->responsePacket("Done"));
         return;
     }
 
@@ -63,7 +65,7 @@ void PacketHandler::accepted(std::string line)
     {
         float volume = sPCControl.getVolumeLevel();
         const char* volumeLevel = Helper::to_string(volume).c_str();
-        socket->sendLine(volumeLevel);
+        socket->send(packet->responsePacket(volumeLevel));
 
         return;
     }
@@ -72,17 +74,18 @@ void PacketHandler::accepted(std::string line)
     {
         float value = atof(arguments.c_str());
         sPCControl.setVolumeLevel(value);
+        socket->send(packet->responsePacket("OK"));
         //socket->sendLine("OK");
         return;
     }
 }
 
-std::list<EpisodeTorrent> PacketHandler::getTorrentMagnets()
+std::list<EpisodeTorrent> PacketHandler::getTorrentMagnets(Packet* packet)
 {
     URLHandler handler;
     std::list<EpisodeTorrent> list;
 
-    socket->sendLine("Start downloading page");
+    socket->send(packet->responsePacket("Start downloading page"));
 
     std::string url_start = "http://thepiratebay.pe/user/eztv/";
     for (int i = 0; i < 5; ++i)
@@ -90,15 +93,15 @@ std::list<EpisodeTorrent> PacketHandler::getTorrentMagnets()
         std::string url = url_start + Helper::to_string(i) + "/3";
         std::string response = handler.loadUrl(url.c_str());
         if (response.empty())
-            socket->sendLine("Page return wrong http code");
+            socket->send(packet->responsePacket("Page return wrong http code"));
         else
         {
-            socket->sendLine("Page downloaded, parsing links now");
+            socket->send(packet->responsePacket("Page downloaded, parsing links now"));
             std::list<EpisodeTorrent> magnets = handler.getPirateBayMagnets(response);
             list.insert(list.end(), magnets.begin(), magnets.end());
         }
     }
-    socket->sendLine("Parse complete");
+    socket->send(packet->responsePacket("Parse complete"));
 
     return list;
 }
