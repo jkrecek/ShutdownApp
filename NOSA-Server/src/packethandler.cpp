@@ -64,7 +64,7 @@ void PacketHandler::accepted(Packet *packet)
     if (command == "GET_VOLUME")
     {
         float volume = sPCControl.getVolumeLevel();
-        const char* volumeLevel = Helper::to_string(volume).c_str();
+        const char* volumeLevel = Helper::to_string(volume);
         socket->send(packet->responsePacket(volumeLevel));
 
         return;
@@ -75,7 +75,6 @@ void PacketHandler::accepted(Packet *packet)
         float value = atof(arguments.c_str());
         sPCControl.setVolumeLevel(value);
         socket->send(packet->responsePacket("OK"));
-        //socket->sendLine("OK");
         return;
     }
 }

@@ -18,8 +18,8 @@ public:
     static std::string toLowerCase(std::string s);
     static std::string replace(std::string s, const char* from, const char* to);
     static bool iequals(const std::string& a, const std::string& b);
-    static std::string to_string(int val);
-    static std::string to_string(float val);
+    static const char* to_string(int val);
+    static const char* to_string(float val);
     static const char* stripNewLine(const char* ori);
     static void printBytes(char** bytes, unsigned printMax = 0);
 

@@ -41,6 +41,15 @@ int RemoteCore::run()
         catch (SocketClosedException& /*e*/)
         {
             std::cout << "Exception occured in estabilishing connection. Socket is beeing closed." << std::endl;
+            if (connection)
+            {
+                delete connection;
+                connection = NULL;
+            }
+        }
+
+        if (!connection)
+        {
             socket->close();
             continue;
         }

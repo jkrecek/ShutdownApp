@@ -166,18 +166,18 @@ bool Helper::iequals(const std::string& a, const std::string& b)
     return a.size() == b.size() && toLowerCase(a) == toLowerCase(b);
 }
 
-std::string Helper::to_string(int val)
+const char* Helper::to_string(int val)
 {
-    char str[32];
+    char str[64];
     sprintf(str, "%d", val);
-    return str;
+    return strdup(str);
 }
 
-std::string Helper::to_string(float val)
+const char* Helper::to_string(float val)
 {
-    char str[32];
+    char str[64];
     sprintf(str, "%f", val);
-    return str;
+    return strdup(str);
 }
 
 const char* Helper::stripNewLine(const char* ori)
