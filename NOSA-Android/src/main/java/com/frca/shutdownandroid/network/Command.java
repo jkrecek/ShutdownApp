@@ -1,24 +1,19 @@
-package com.frca.shutdownandroid.classes;
+package com.frca.shutdownandroid.network;
 
-import com.frca.shutdownandroid.network.NetworkThread;
-
-/**
- * Created by KillerFrca on 7.12.13.
- */
 public class Command {
-    private String command;
+    private Packet packet;
 
     private NetworkThread.OnMessageReceived messageReceived = null;
     private NetworkThread.OnExceptionReceived exceptionReceived = null;
 
-    public Command(String command, NetworkThread.OnMessageReceived messageReceived, NetworkThread.OnExceptionReceived exceptionReceived) {
-        this.command = command;
+    public Command(Packet packet, NetworkThread.OnMessageReceived messageReceived, NetworkThread.OnExceptionReceived exceptionReceived) {
+        this.packet = packet;
         this.messageReceived = messageReceived;
         this.exceptionReceived = exceptionReceived;
     }
 
-    public String getCommand() {
-        return command;
+    public Packet getPacket() {
+        return packet;
     }
 
     public NetworkThread.OnMessageReceived getMessageReceived() {

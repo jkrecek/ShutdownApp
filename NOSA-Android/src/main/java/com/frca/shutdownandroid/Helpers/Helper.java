@@ -112,4 +112,12 @@ public abstract class Helper {
         t.printStackTrace(pw);
         return sw.toString();
     }
+
+    public static void simpleSleep(long time) {
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+        }
+    }
 }

@@ -2,31 +2,40 @@ package com.frca.shutdownandroid.network;
 
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
+import android.util.SparseArray;
 
 import com.frca.shutdownandroid.Helpers.Helper;
-import com.frca.shutdownandroid.classes.Command;
 
-import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by KillerFrca on 1.12.13.
  */
 public class NetworkTask extends Thread implements Runnable {
 
-    private Command command;
-
     private String ipAddress;
 
     private Socket socket;
 
-    public NetworkTask(String ipAddress, Command command) {
+    private List<Command> sendBuffer = Collections.synchronizedList(new ArrayList<Command>());
+
+    private SparseArray<Command> waitingCommands = new SparseArray<Command>();
+
+    private OnNetworkTaskEnd onEnd;
+
+    public NetworkTask(String ipAddress, OnNetworkTaskEnd onEnd) {
         this.ipAddress = ipAddress;
-        this.command = command;
+        this.onEnd = onEnd;
     }
 
     @Override
@@ -34,78 +43,103 @@ public class NetworkTask extends Thread implements Runnable {
         try {
             socket = NetworkThread.createSocket(ipAddress);
 
-            DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+            sendPacket(NetworkThread.createPacket("type=ANDROID user=frca pass=superdupr"));
 
-            Log.i(getClass().getSimpleName(), "Send: " + command.getCommand());
-            output.writeBytes(command.getCommand() + '\n');
-            output.flush();
-
-            /*try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            output.writeBytes("TEST0" + '\n');
-            output.flush();*/
-
-            BufferedReader input;
-            while (true) {
-                input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-                if (input.ready()) {
-                    String line;
-                    while ((line = input.readLine()) != null) {
-                        if (line.equals("CLOSE"))
-                            return;
-
-                        final String response = getReceivedString(line);
-                        if (response != null) {
-                            Log.i(getClass().getSimpleName(), "Read: " + response);
-                            if (command.getMessageReceived() != null) {
-                                Helper.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        command.getMessageReceived().messageReceived(response);
-                                    }
-                                });
-                            }
+            Packet rcvPacket = null;
+            while (socket.isConnected()) {
+                synchronized (sendBuffer) {
+                    if (!sendBuffer.isEmpty()) {
+                        Iterator<Command> it = sendBuffer.iterator();
+                        while(it.hasNext()) {
+                            Command command = it.next();
+                            sendPacket(command.getPacket());
+                            waitingCommands.put(command.getPacket().getId(), command);
+                            it.remove();
                         }
                     }
                 }
 
                 try {
-                    sleep(100);
-                } catch (InterruptedException e) {
+                    rcvPacket = Packet.readPacket(socket.getInputStream());
+                    if (rcvPacket != null)
+                        readPacket(rcvPacket);
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+                Helper.simpleSleep(100);
             }
         } catch (final IOException e) {
-            if (command.getExceptionReceived() != null) {
-                Helper.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    command.getExceptionReceived().exceptionReceived(e);
-                }
-            });
-            }
+            respondExceptions(e);
         } finally {
+            onEnd.onEnd(this);
             try {
                 NetworkThread.closeSocket(socket);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            } catch (IOException e) { /* no problem if already closed */ }
         }
     }
 
-    private String getReceivedString(String string) {
-        if (TextUtils.isEmpty(string))
-            return null;
+    private void sendPacket(Packet packet) throws IOException {
+        DataOutputStream output = new DataOutputStream(socket.getOutputStream());
 
-        string = string.trim();
-        if (TextUtils.isEmpty(string))
-            return null;
+        Log.i("Network", "SND[" + packet.getId() + "]: " + packet.getContent());
 
-        string = string.replaceAll("\\\\n", "\n");
-        return string;
+        byte[] strBytes = packet.getContent().getBytes();
+        byte[] bytes = ByteBuffer
+            .allocate(4 + strBytes.length + 1)
+            .putInt(packet.getId())
+            .put(strBytes)
+            .put((byte) 10)
+            .array();
+        /*output.writeInt(packet.getId());
+        output.writeBytes(packet.getContent());
+        output.write('\n');*/
+        output.write(bytes);
+        output.flush();
+    }
+
+    private void readPacket(final Packet packet) {
+        final Command command = waitingCommands.get(packet.getId(), null);
+        if (command == null) {
+            Log.i("Network", "RCV_E: " + String.valueOf(packet.getId()) + ", `" + packet.getContent() + "` ... not found");
+            return;
+        }
+
+        Log.i("Network", "RCV[" + packet.getId() + "]: " + packet.getContent());
+        Helper.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (command.getMessageReceived() != null)
+                    command.getMessageReceived().messageReceived(packet.getContent());
+            }
+        });
+    }
+
+    public void respondExceptions(final IOException e) {
+        Helper.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Command command;
+                for (int idx = 0; idx < waitingCommands.size(); ++ idx) {
+                    command = waitingCommands.valueAt(idx);
+                    if (command.getExceptionReceived() != null)
+                        command.getExceptionReceived().exceptionReceived(e);
+                }
+            }
+        });
+    }
+
+    public void addCommand(Command command) {
+        synchronized (sendBuffer) {
+            sendBuffer.add(command);
+        }
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public interface OnNetworkTaskEnd {
+        void onEnd(NetworkTask task);
     }
 }

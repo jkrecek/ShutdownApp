@@ -1,12 +1,10 @@
 package com.frca.shutdownandroid.network;
 
 import android.content.Context;
-import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.frca.shutdownandroid.Helpers.Helper;
-import com.frca.shutdownandroid.classes.Command;
 import com.frca.shutdownandroid.classes.Connection;
 
 import java.io.DataOutputStream;
@@ -14,6 +12,9 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -29,6 +30,9 @@ public class NetworkThread /*extends Thread implements Runnable */ {
 
     private Connection connection;
     private Context context;
+    private static int currentPacketId = 0;
+
+    private Map<String, NetworkTask> activeTask = Collections.synchronizedMap(new HashMap<String, NetworkTask>());
 
     public NetworkThread(Context context) {
         this.context = context;
@@ -43,7 +47,7 @@ public class NetworkThread /*extends Thread implements Runnable */ {
     }
 
     public void sendMessage(String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
-        Command command = new Command(message, messageReceived, exceptionReceived);
+        Command command = new Command(createPacket(message), messageReceived, exceptionReceived);
         run(connection.getIp(), command);
     }
 
@@ -56,13 +60,23 @@ public class NetworkThread /*extends Thread implements Runnable */ {
     }
 
     public void sendMessage(String ipAddress, String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
-        Command command = new Command(message, messageReceived, exceptionReceived);
+        Command command = new Command(createPacket(message), messageReceived, exceptionReceived);
         run(ipAddress, command);
     }
 
-    public static NetworkTask run(String ipAddress, Command command) {
-        NetworkTask task = new NetworkTask(ipAddress, command);
-        task.start();
+    public NetworkTask run(String ipAddress, Command command) {
+        NetworkTask task;
+        if (activeTask.containsKey(ipAddress))
+            task = activeTask.get(ipAddress);
+        else {
+            task = new NetworkTask(ipAddress, onTaskEndInstance);
+            activeTask.put(ipAddress, task);
+        }
+
+        task.addCommand(command);
+        if (!task.isAlive())
+            task.start();
+
         return task;
     }
 
@@ -77,9 +91,6 @@ public class NetworkThread /*extends Thread implements Runnable */ {
 
         socket.connect(new InetSocketAddress(ipAddress, NetworkThread.SERVER_PORT), NetworkThread.CONNECT_TIMEOUT);
         socket.setSoTimeout(NetworkThread.STREAM_TIMEOUT);
-        final DataOutputStream output = new DataOutputStream(socket.getOutputStream());
-        output.writeBytes("type=ANDROID user=frca pass=superdupr" + '\n');
-        output.flush();
 
         Log.i("Network", "M: Connected in " + String.valueOf(System.currentTimeMillis() - cur) + " milis.");
         return socket;
@@ -97,6 +108,17 @@ public class NetworkThread /*extends Thread implements Runnable */ {
         }
 
         return socket;
+    }
+
+    private NetworkTask.OnNetworkTaskEnd onTaskEndInstance = new NetworkTask.OnNetworkTaskEnd() {
+        @Override
+        public void onEnd(NetworkTask task) {
+            activeTask.remove(task.getIpAddress());
+        }
+    };
+
+    public static Packet createPacket(String message) {
+        return new Packet(++currentPacketId, message);
     }
 
     public void pingConnection(Connection connection, final Connection.PingResult resultCallback) {
