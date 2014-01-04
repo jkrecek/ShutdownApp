@@ -2,12 +2,13 @@
 #include "remotecore.h"
 #include <iostream>
 #include <unistd.h>
+#include "defines.h"
 
 int main()
 {
     Configuration::loadFile("D:\\Dropbox\\Dev\\ShutdownApp\\config.conf");
     int result = 0;
-    while(true)
+    LOOP_LINE
     {
         RemoteCore core(SOCKET_PORT);
         bool success = core.socketCreated();
@@ -15,8 +16,12 @@ int main()
         {
             result = core.run();
             core.cleanSockets();
-        } else
-            sleep(15);
+        }
+        ON_NO_SOCKET
+        {
+            std::cout << "Next socket binding attempt will be in " << RETRY_DELAY << " seconds" << std::endl;
+            sleep(RETRY_DELAY);
+        }
     }
     return result;
 }
