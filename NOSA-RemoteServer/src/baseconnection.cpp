@@ -14,7 +14,7 @@ BaseConnection::BaseConnection(NetworkSocket *_socket, ConnectionType _type)
 
 BaseConnection::~BaseConnection()
 {
-    sConnections.remote(this);
+    sConnections.remove(this);
     delete socket;
 }
 

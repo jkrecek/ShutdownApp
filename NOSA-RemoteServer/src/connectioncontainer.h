@@ -35,7 +35,7 @@ public:
     PCConnection* getPCConnection(AndroidConnection* con);
     std::vector<AndroidConnection*> getAndroidConnections(PCConnection* con);
 
-    void remote(BaseConnection* connection);
+    void remove(BaseConnection* connection);
 
 private:
     ConnectionVector container[TYPE_COUNT];
