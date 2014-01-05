@@ -61,10 +61,11 @@ void BaseConnection::read()
             if (!packet)
                 continue;
 
-            if (packet->getMessage() == "CLOSE")
-                break;
+            /*if (packet->getMessage() == "CLOSE")
+                break;*/
 
-            redistributePacket(packet);
+            if (!handlePacket(packet))
+                redistributePacket(packet);
             delete packet;
         }
     }

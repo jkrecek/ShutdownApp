@@ -9,9 +9,11 @@ Configuration::Configuration()
 
 Configuration* Configuration::loadFile(const char *file)
 {
-    Configuration* conf = new Configuration();
-
     std::ifstream infile(file);
+    if (!infile.good())
+        return NULL;
+
+    Configuration* conf = new Configuration();
     std::string line, name, value;
     std::size_t pos;
     while (std::getline(infile, line))
@@ -24,7 +26,7 @@ Configuration* Configuration::loadFile(const char *file)
 
         name = line.substr(0, pos);
         value = line.substr(pos+1);
-        conf->values.insert(std::pair<std::string, std::string>(name, value));
+        conf->values.insertValue(name, value);
     }
 
     return conf;
@@ -33,29 +35,42 @@ Configuration* Configuration::loadFile(const char *file)
 
 std::string Configuration::getString(std::string key)
 {
-    NameValueMap::iterator itr = values.find(key);
-    if (itr != values.end())
-        return itr->second;
-
-    return NULL;
+    return values.get(key);
 }
 
 int Configuration::getInt(std::string key)
 {
-    std::string val = getString(key);
-    return atoi(val.c_str());
+    return values.getInt(key);
 
 }
 
 float Configuration::getFloat(std::string key)
 {
-    std::string val = getString(key);
-    return atof(val.c_str());
+    return values.getFloat(key);
 }
 
 
 IpAddress Configuration::getIpAddress(std::string key)
 {
-    std::string val = getString(key);
-    return IpAddress(val.c_str());
+    return IpAddress(values.get(key).c_str());
+}
+
+
+bool Configuration::isEmpty(std::string key)
+{
+    return values.get(key).empty();
+}
+
+const char* Configuration::isValid()
+{
+    if (isEmpty("REMOTE_ADDRESS") || isEmpty("USER") || isEmpty("PASS"))
+        return "You must fill all required fields, please check dist file for needed params";
+
+    if (getString("USER").length() < 4)
+        return "Your username must have atleast 5 characters";
+
+    if (getString("PASS").length() < 5)
+        return "Your password must have atleast 5 characters";
+
+    return NULL;
 }

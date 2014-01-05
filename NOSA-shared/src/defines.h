@@ -11,4 +11,6 @@
     #define ON_NO_SOCKET else
 #endif
 
+#define SOCKET_PORT 3691
+
 #endif // DEFINES_H

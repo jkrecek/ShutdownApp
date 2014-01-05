@@ -94,14 +94,14 @@ const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NUL
 
     adapterInfo = (IP_ADAPTER_INFO *)malloc(sizeof(IP_ADAPTER_INFO));
     if (adapterInfo == NULL)
-        std::cerr << "E: Allocating memory needed to call GetAdaptersinfo went wrong." << std::endl;
+        std::cout << "E: Allocating memory needed to call GetAdaptersinfo went wrong." << std::endl;
 
     if (GetAdaptersInfo(adapterInfo, &dwBufLen) == ERROR_BUFFER_OVERFLOW)
     {
         free(adapterInfo);
         adapterInfo = (IP_ADAPTER_INFO *)malloc(dwBufLen);
         if (adapterInfo == NULL)
-            std::cerr << "E: Allocating memory needed to call GetAdaptersinfo went wrong." << std::endl;
+            std::cout << "E: Allocating memory needed to call GetAdaptersinfo went wrong." << std::endl;
     }
 
     if (GetAdaptersInfo(adapterInfo, &dwBufLen) == NO_ERROR)

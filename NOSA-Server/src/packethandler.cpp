@@ -34,7 +34,7 @@ void PacketHandler::accepted(Packet *packet)
     if (controlCommand != NONE)
     {
         const char* result = sPCControl.execute(controlCommand);
-        socket->send(packet->responsePacket(result));
+        socket->sendResponse(packet, result);
         return;
     }
 
@@ -42,7 +42,7 @@ void PacketHandler::accepted(Packet *packet)
     {
         IpAddress serverIp = !arguments.empty() ? IpAddress(arguments.c_str()) : NULL;
         const char * mac = socket->getMAC(&serverIp);
-        socket->send(packet->responsePacket(mac));
+        socket->sendResponse(packet, mac);
         return;
     }
 
@@ -53,11 +53,12 @@ void PacketHandler::accepted(Packet *packet)
 
         filterTorrents(series, torrents);
 
-        socket->send(packet->responsePacket("Torrents filtered, running magnet links"));
+        socket->sendResponse(packet, "Torrents filtered, running magnet links", false);
 
         runTorrents(torrents);
 
-        socket->send(packet->responsePacket("Done"));
+        socket->sendResponse(packet, "Done", true);
+
         return;
     }
 
@@ -65,7 +66,7 @@ void PacketHandler::accepted(Packet *packet)
     {
         float volume = sPCControl.getVolumeLevel();
         const char* volumeLevel = Helper::to_string(volume);
-        socket->send(packet->responsePacket(volumeLevel));
+        socket->sendResponse(packet, volumeLevel);
 
         return;
     }
@@ -74,7 +75,7 @@ void PacketHandler::accepted(Packet *packet)
     {
         float value = atof(arguments.c_str());
         sPCControl.setVolumeLevel(value);
-        socket->send(packet->responsePacket("OK"));
+        socket->sendResponse(packet, "OK");
         return;
     }
 }
@@ -84,7 +85,7 @@ std::list<EpisodeTorrent> PacketHandler::getTorrentMagnets(Packet* packet)
     URLHandler handler;
     std::list<EpisodeTorrent> list;
 
-    socket->send(packet->responsePacket("Start downloading page"));
+    socket->sendResponse(packet, "Start downloading page", false);
 
     std::string url_start = "http://thepiratebay.pe/user/eztv/";
     for (int i = 0; i < 5; ++i)
@@ -92,15 +93,15 @@ std::list<EpisodeTorrent> PacketHandler::getTorrentMagnets(Packet* packet)
         std::string url = url_start + Helper::to_string(i) + "/3";
         std::string response = handler.loadUrl(url.c_str());
         if (response.empty())
-            socket->send(packet->responsePacket("Page return wrong http code"));
+            socket->sendResponse(packet, "Page return wrong http code", false);
         else
         {
-            socket->send(packet->responsePacket("Page downloaded, parsing links now"));
+            socket->sendResponse(packet, "Page downloaded, parsing links now", false);
             std::list<EpisodeTorrent> magnets = handler.getPirateBayMagnets(response);
             list.insert(list.end(), magnets.begin(), magnets.end());
         }
     }
-    socket->send(packet->responsePacket("Parse complete"));
+    socket->sendResponse(packet, "Parse complete", false);
 
     return list;
 }

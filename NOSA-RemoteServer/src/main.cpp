@@ -1,4 +1,3 @@
-#include "configuration.h"
 #include "remotecore.h"
 #include <iostream>
 #include <unistd.h>
@@ -6,7 +5,6 @@
 
 int main()
 {
-    Configuration::loadFile("D:\\Dropbox\\Dev\\ShutdownApp\\config.conf");
     int result = 0;
     LOOP_LINE
     {

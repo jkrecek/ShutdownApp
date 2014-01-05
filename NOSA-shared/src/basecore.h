@@ -1,8 +1,6 @@
 #ifndef BASECORE_H
 #define BASECORE_H
 
-#define SOCKET_PORT 3691
-
 class BaseCore
 {
 public:

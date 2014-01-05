@@ -114,6 +114,15 @@ void NetworkSocket::sendMsg(const char *message)
     send(new Packet(0, message));
 }
 
+void NetworkSocket::sendResponse(Packet *originalPacket, const char *response, bool close)
+{
+    send(originalPacket->responsePacket(response));
+    if (close)
+    {
+        send(originalPacket->responsePacket("CLOSE"));
+    }
+}
+
 void NetworkSocket::close()
 {
     sendMsg("CLOSE");

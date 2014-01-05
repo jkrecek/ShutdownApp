@@ -4,8 +4,8 @@
 #include <map>
 #include <string>
 #include "ipaddress.h"
-
-typedef std::map<std::string, std::string> NameValueMap;
+#include "singleton.h"
+#include "nvmap.h"
 
 class Configuration
 {
@@ -16,11 +16,14 @@ public:
     int getInt(std::string key);
     float getFloat(std::string key);
     IpAddress getIpAddress(std::string key);
+    bool isEmpty(std::string key);
+
+    const char* isValid();
 
 private:
     Configuration();
 
-    NameValueMap values;
+    NVMap values;
 };
 
 #endif // CONFIGURATION_H

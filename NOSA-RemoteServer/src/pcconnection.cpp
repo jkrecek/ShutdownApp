@@ -22,3 +22,8 @@ void PCConnection::redistributePacket(Packet *packet)
         (*itr)->getSocket()->send(packet);
     }
 }
+
+bool PCConnection::handlePacket(Packet */*packet*/)
+{
+    return false;
+}

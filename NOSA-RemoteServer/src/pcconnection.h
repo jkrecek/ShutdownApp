@@ -9,6 +9,7 @@ public:
     PCConnection(NetworkSocket* _socket);
 
     void redistributePacket(Packet* packet);
+    bool handlePacket(Packet* packet);
 };
 
 #endif // PCCONNECTION_H

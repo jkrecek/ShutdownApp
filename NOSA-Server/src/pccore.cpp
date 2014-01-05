@@ -3,17 +3,32 @@
 #include "helper.h"
 #include "socketclosedexception.h"
 
-PCCore::PCCore(int _port)
-    : BaseCore(), port(_port), socket(NULL), handler(NULL)
+PCCore::PCCore()
+    : BaseCore(), socket(NULL), handler(NULL)
 {
-    std::cout << "Connecting to server" << std::endl;
+    std::cout << "Loading config ..." << std::endl;
+    configuration = Configuration::loadFile("config.conf");
+    if (configuration)
+        std::cout << "Config loaded!" << std::endl;
+    else if (const char* error = configuration->isValid())
+    {
+        std::cout << "Configuration file is not valid! (" << error << ")" << std::endl;
+        exit(0);
+    }
+    else
+    {
+        std::cout << "Config file not found!" << std::endl;
+        exit(0);
+    }
+
+    std::cout << "Connecting to server ..." << std::endl;
     if (!prepareSockets())
         return;
 
-    socket = MainSocket::createSocket("127.0.0.1", port);
+    socket = MainSocket::createSocket(configuration);
     if (socket)
     {
-        std::cout << "Connected" << std::endl;
+        std::cout << "Connected!" << std::endl;
         handler = new PacketHandler(socket);
     }
 }

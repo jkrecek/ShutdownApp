@@ -42,7 +42,7 @@ std::string URLHandler::loadUrl(const char* url)
 
 
         if (res != CURLE_OK)
-            std::cerr <<  "E: curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+            std::cout <<  "E: curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
 
         if (httpCode != 200)
         {
@@ -52,7 +52,7 @@ std::string URLHandler::loadUrl(const char* url)
 
         curl_easy_cleanup(curl);
     } else
-        std::cerr <<  "E: Curl couldn't be created. " << std::endl;
+        std::cout <<  "E: Curl couldn't be created. " << std::endl;
 
     return readBuffer;
 }

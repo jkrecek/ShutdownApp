@@ -43,7 +43,7 @@ const char* ServerControl::execute(Command command)
     }
     else
     {
-        std::cerr << "W: Unable to find proper command for user action." << std::endl;
+        std::cout << "W: Unable to find proper command for user action." << std::endl;
         return "ERROR";
     }
 

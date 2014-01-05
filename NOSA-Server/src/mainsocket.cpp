@@ -1,6 +1,7 @@
 #include "mainsocket.h"
 #include <iostream>
 #include <ctime>
+#include "defines.h"
 #ifndef _WIN32
     #include <netdb.h>
     #include <stdio.h>
@@ -14,13 +15,15 @@ MainSocket::MainSocket(TCPSocket socket, sockaddr_in info)
 
 }
 
-MainSocket* MainSocket::createSocket(std::string hostname, int port)
+MainSocket* MainSocket::createSocket(Configuration* configuration)
 {
     hostent *host;
     sockaddr_in sockInfo;
     TCPSocket baseSocket;
 
-    if ((host = gethostbyname(hostname.c_str())) == NULL)
+    const char* hostname = configuration->getString("REMOTE_ADDRESS").c_str();
+
+    if ((host = gethostbyname(hostname)) == NULL)
     {
         std::cout << "Wrong address" << std::endl;
         return NULL;
@@ -34,7 +37,7 @@ MainSocket* MainSocket::createSocket(std::string hostname, int port)
 
 
     sockInfo.sin_family = AF_INET;
-    sockInfo.sin_port = htons(port);
+    sockInfo.sin_port = htons(SOCKET_PORT);
     memcpy(&(sockInfo.sin_addr), host->h_addr, host->h_length);
 
     if (connect(baseSocket, (sockaddr *)&sockInfo, sizeof(sockInfo)) == SOCKET_ERROR)
@@ -45,6 +48,13 @@ MainSocket* MainSocket::createSocket(std::string hostname, int port)
 
 
     MainSocket* sock = new MainSocket(baseSocket, sockInfo);
-    sock->sendMsg("type=PC user=frca pass=superdupr");
+    sock->sendMsg(generateAuthMessage(configuration));
     return sock;
+}
+
+const char* MainSocket::generateAuthMessage(Configuration *configuration)
+{
+    char buffer[1024];
+    snprintf(buffer, 1024, "type=PC user=%s pass=%s", configuration->getString("USER").c_str(), configuration->getString("PASS").c_str());
+    return strdup(buffer);
 }

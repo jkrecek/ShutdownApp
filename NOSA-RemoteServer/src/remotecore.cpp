@@ -7,8 +7,8 @@
 
 #ifndef _WIN32
     #include <pthread.h>
-    #include <sys/socket.h> // Needed for the socket functions
-    #include <netdb.h>      // Needed for the socket functions
+    #include <sys/socket.h>
+    #include <netdb.h>
 #endif
 
 RemoteCore::RemoteCore(int port)
@@ -50,7 +50,7 @@ int RemoteCore::run()
 
         if (!connection)
         {
-            socket->close();
+            delete socket;
             continue;
         }
 

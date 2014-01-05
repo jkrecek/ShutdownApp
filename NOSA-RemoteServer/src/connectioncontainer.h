@@ -31,7 +31,7 @@ public:
     iterator begin();
 
     void insert(BaseConnection* connection);
-    bool get(std::vector<BaseConnection*>& connections);
+
     PCConnection* getPCConnection(AndroidConnection* con);
     std::vector<AndroidConnection*> getAndroidConnections(PCConnection* con);
 

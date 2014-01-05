@@ -7,11 +7,12 @@
 #include "basecore.h"
 #include "mainsocket.h"
 #include "packethandler.h"
+#include "configuration.h"
 
 class PCCore : public BaseCore
 {
 public:
-    PCCore(int port);
+    PCCore();
     ~PCCore();
 
     int run();
@@ -19,10 +20,10 @@ public:
     bool socketCreated() { return socket; }
 
 private:
-    int port;
     bool initialized;
     MainSocket* socket;
     PacketHandler* handler;
+    Configuration* configuration;
 };
 
 #endif // CORE_H

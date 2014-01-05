@@ -16,3 +16,15 @@ void AndroidConnection::redistributePacket(Packet *packet)
     if (PCConnection* conn = sConnections.getPCConnection(this))
         conn->getSocket()->send(packet);
 }
+
+bool AndroidConnection::handlePacket(Packet *packet)
+{
+    if (packet->getMessage() == "STATUS")
+    {
+        PCConnection* con = sConnections.getPCConnection(this);
+        socket->sendResponse(packet, con ? "ONLINE" : "OFFLINE");
+        return true;
+    }
+
+    return false;
+}

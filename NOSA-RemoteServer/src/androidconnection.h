@@ -9,6 +9,7 @@ public:
     AndroidConnection(NetworkSocket* _socket);
 
     void redistributePacket(Packet* packet);
+    bool handlePacket(Packet* packet);
 };
 
 #endif // ANDROIDCONNECTION_H

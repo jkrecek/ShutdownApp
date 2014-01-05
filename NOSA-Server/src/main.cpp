@@ -8,7 +8,7 @@ int main()
     int result = 0;
     LOOP_LINE
     {
-        PCCore core(SOCKET_PORT);
+        PCCore core;
         bool success = core.socketCreated();
         if (success)
         {

@@ -14,7 +14,7 @@ ServerSocket* ServerSocket::createSocket(int port)
 
     if ((server = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET)
     {
-        std::cerr << "E: Couldn't create socket." << std::endl;
+        std::cout << "E: Couldn't create socket." << std::endl;
         return NULL;
     }
 
@@ -24,13 +24,13 @@ ServerSocket* ServerSocket::createSocket(int port)
 
     if (bind(server, (sockaddr *)&sockInfo, sizeof(sockInfo)) == SOCKET_ERROR)
     {
-        std::cerr << "E: Couldn't bind socket." << std::endl;
+        std::cout << "E: Couldn't bind socket." << std::endl;
         return NULL;
     }
 
     if (listen(server, 10) == SOCKET_ERROR)
     {
-        std::cerr << "E: Couldn't create listining queue." << std::endl;
+        std::cout << "E: Couldn't create listining queue." << std::endl;
         return NULL;
     }
 

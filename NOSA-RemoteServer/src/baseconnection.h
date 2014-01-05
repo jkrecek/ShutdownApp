@@ -26,6 +26,7 @@ public:
     void read();
 
     virtual void redistributePacket(Packet* packet) = 0;
+    virtual bool handlePacket(Packet* packet) = 0;
 
 protected:
     BaseConnection(NetworkSocket* _socket, ConnectionType type);
