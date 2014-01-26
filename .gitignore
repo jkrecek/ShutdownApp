@@ -1,7 +1,10 @@
 .*
+!.git*
 /local.properties
 /.idea/
+/bin
 /build*
+!build.gradle
 .DS_Store
 *.pro.user*
 *.user*
