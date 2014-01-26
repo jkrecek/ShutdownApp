@@ -42,4 +42,4 @@ if(WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
 endif()
 
-install_targets(/bin ${TARGET_NAME})
+install(TARGETS ${TARGET_NAME} DESTINATION .)

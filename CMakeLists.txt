@@ -5,6 +5,9 @@ set(CMAKE_BUILD_TYPE Debug)
 set(BUILD_CURL_EXE false)
 set(BUILD_CURL_TESTS false)
 
+SET(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+
 add_subdirectory(NOSA-shared)
 add_subdirectory(NOSA-RemoteServer)
 add_subdirectory(NOSA-Server)
+add_subdirectory(NOSA-PCClient)

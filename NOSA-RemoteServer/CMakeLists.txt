@@ -25,3 +25,5 @@ set(LIBS ${LIBS} NOSA-shared)
 target_link_libraries(${TARGET_NAME} ${LIBS})
 
 set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+
+install(TARGETS ${TARGET_NAME} DESTINATION .)
