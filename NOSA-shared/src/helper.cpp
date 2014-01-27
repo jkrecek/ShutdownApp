@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #ifdef _WIN32
     #include <Iphlpapi.h>
@@ -206,4 +207,10 @@ void Helper::printBytes(char **bytes, unsigned printMax)
         std::cout << (int) (*bytes)[i] << " ";
 
     std::cout << std::endl;
+}
+
+bool Helper::file_exists(const std::string &name)
+{
+    struct stat fileInfo;
+    return stat(name.c_str(), &fileInfo) == 0;
 }

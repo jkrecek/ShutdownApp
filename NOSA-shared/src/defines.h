@@ -12,5 +12,6 @@
 #endif
 
 #define SOCKET_PORT 3691
+#define CONFIG_FILENAME "config.conf"
 
 #endif // DEFINES_H

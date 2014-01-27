@@ -19,6 +19,7 @@ public:
     bool contains(std::string key);
 
     std::string get(std::string key);
+    std::string getString(std::string key, std::string defaultValue = "");
     int getInt(std::string key, int defaultValue = 0);
     float getFloat(std::string key, float defaultValue = 0.f);
 };

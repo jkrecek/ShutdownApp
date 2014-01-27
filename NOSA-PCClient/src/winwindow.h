@@ -7,7 +7,7 @@
 #include <commctrl.h>
 #include <list>
 #include <string>
-#include "config.h"
+#include "configuration.h"
 
 enum Field {
     BTN_SAVE = 1000,
@@ -47,16 +47,17 @@ private:
     void doSave();
     void doRun(bool asService);
     void doRunOnStart();
+    void doTerminateAll();
 
     std::string getExecutablePath(bool asService);
-    inline bool file_exists(const std::string& name);
+
     const char* getText(Field field);
     bool startProgram(std::string executable);
 
     int processCount(const char* executable);
     void terminateProcesses(const char* executable);
 
-    Config* m_config;
+    Configuration* m_config;
     HGDIOBJ m_defaultFont;
     std::map<int, HWND> m_objects;
     HINSTANCE m_instance;

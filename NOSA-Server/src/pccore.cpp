@@ -2,24 +2,25 @@
 #include <iostream>
 #include "helper.h"
 #include "socketclosedexception.h"
+#include "defines.h"
 
 PCCore::PCCore()
     : BaseCore(), socket(NULL), handler(NULL)
 {
     std::cout << "Loading config ..." << std::endl;
-    configuration = Configuration::loadFile("config.conf");
-    if (configuration)
-        std::cout << "Config loaded!" << std::endl;
+    configuration = Configuration::loadFile(CONFIG_FILENAME);
+    if (!configuration->fileExists())
+    {
+        std::cout << "Config file not found!" << std::endl;
+        exit(0);
+    }
     else if (const char* error = configuration->isValid())
     {
         std::cout << "Configuration file is not valid! (" << error << ")" << std::endl;
         exit(0);
     }
     else
-    {
-        std::cout << "Config file not found!" << std::endl;
-        exit(0);
-    }
+        std::cout << "Config loaded!" << std::endl;
 
     std::cout << "Connecting to server ..." << std::endl;
     if (!prepareSockets())

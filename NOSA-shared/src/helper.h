@@ -22,6 +22,7 @@ public:
     static const char* to_string(float val);
     static const char* stripNewLine(const char* ori);
     static void printBytes(char** bytes, unsigned printMax = 0);
+    static bool file_exists(const std::string& name);
 
 #ifdef _WIN32
     static std::string GetSZValueUnique( HKEY openKey, const char* regkey, const char* keyName );

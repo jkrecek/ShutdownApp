@@ -66,6 +66,15 @@ std::string NVMap::get(std::string key)
     return STR_INVALID;
 }
 
+std::string NVMap::getString(std::string key, std::string defaultValue)
+{
+    std::string val = get(key);
+    if (val != STR_INVALID)
+        return val;
+
+    return defaultValue;
+}
+
 int NVMap::getInt(std::string key, int defaultValue)
 {
     std::string val = get(key);

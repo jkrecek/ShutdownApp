@@ -20,10 +20,12 @@ else()
     set(LIBS ${LIBS} pthread)
 endif()
 
-set(LIBS ${LIBS} NOSA-shared)
+set(LIBS ${LIBS} NOSA)
 
 target_link_libraries(${TARGET_NAME} ${LIBS})
 
-set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+if(WIN32 AND BUILD_PROJECT_STATIC)
+    set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+endif()
 
 install(TARGETS ${TARGET_NAME} DESTINATION .)

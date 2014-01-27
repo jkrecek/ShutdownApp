@@ -1,6 +1,9 @@
 #include "winwindow.h"
 #include <iostream>
 #include <tlhelp32.h>
+#include "helper.h"
+#include "defines.h"
+
 #ifdef __WIN32
     #include <direct.h>
     #define GetCurrentDir _getcwd
@@ -16,7 +19,7 @@ const static char* winName = "NOSA PC Client";
 std::map<HWND, WinWindow* > WindowHolder::windowMap;
 
 WinWindow::WinWindow(HINSTANCE instance, int nCmdShow)
-    : m_instance(instance), m_defaultFont(GetStockObject(DEFAULT_GUI_FONT)), m_config(Config::load())
+    : m_instance(instance), m_defaultFont(GetStockObject(DEFAULT_GUI_FONT)), m_config(Configuration::loadFile(CONFIG_FILENAME))
 {
     WNDCLASSEX wc;
 
@@ -131,12 +134,9 @@ void WinWindow::onCreate()
     addButton(BTN_KILL, "Kill", 250, 122, 120, 26);
     addButton(BTN_QUIT, "Quit", 250, 150, 120, 26);
 
-    if (m_config)
-    {
-        SendMessage(m_objects[EDIT_ADDRESS], WM_SETTEXT, 0, (LPARAM)m_config->getString("REMOTE_ADDRESS").c_str());
-        SendMessage(m_objects[EDIT_USERNAME], WM_SETTEXT, 0, (LPARAM)m_config->getString("USER").c_str());
-        SendMessage(m_objects[EDIT_PASSWORD], WM_SETTEXT, 0, (LPARAM)m_config->getString("PASS").c_str());
-    }
+    SendMessage(m_objects[EDIT_ADDRESS], WM_SETTEXT, 0, (LPARAM)m_config->getString("REMOTE_ADDRESS", "").c_str());
+    SendMessage(m_objects[EDIT_USERNAME], WM_SETTEXT, 0, (LPARAM)m_config->getString("USER", "").c_str());
+    SendMessage(m_objects[EDIT_PASSWORD], WM_SETTEXT, 0, (LPARAM)m_config->getString("PASS", "").c_str());
 }
 
 bool WinWindow::onCommand(WPARAM handle, LPARAM lParam)
@@ -159,7 +159,7 @@ bool WinWindow::onCommand(WPARAM handle, LPARAM lParam)
             DestroyWindow(m_window);
             break;
         case BTN_KILL:
-            terminateProcesses(serverExecutable);
+            doTerminateAll();
             break;
         default:
             return false;
@@ -236,11 +236,6 @@ void WinWindow::doRunOnStart()
     return;
 }
 
-bool WinWindow::file_exists(const std::string &name)
-{
-    return ( access(name.c_str(), F_OK ) != -1 );
-}
-
 const char* WinWindow::getText(Field field)
 {
     HWND handle = m_objects[field];
@@ -266,7 +261,7 @@ std::string WinWindow::getExecutablePath(bool asService)
 
     if (asService)
     {
-        if (!file_exists(hstart))
+        if (!Helper::file_exists(hstart))
         {
             MessageBox(NULL, "Please place file hstart.exe to application directory.", "Error!",  MB_ICONERROR | MB_OK);
             return "";
@@ -278,7 +273,7 @@ std::string WinWindow::getExecutablePath(bool asService)
         path = "";
 
     std::string server = pathStart + serverExecutable;
-    if (!file_exists(server))
+    if (!Helper::file_exists(server))
     {
         MessageBox(NULL, "Please place file NOSA-Server.exe to application directory. ", "Error!",  MB_ICONERROR | MB_OK);
         return "";
@@ -358,4 +353,11 @@ void WinWindow::terminateProcesses(const char *executable)
     }
 
     CloseHandle(snapshot);
+}
+
+void WinWindow::doTerminateAll()
+{
+    terminateProcesses(serverExecutable);
+
+    MessageBox(NULL, "All NOSA servers are beeing terminated.", "Done!", MB_ICONINFORMATION | MB_OK);
 }
