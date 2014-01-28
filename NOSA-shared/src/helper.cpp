@@ -217,13 +217,15 @@ bool Helper::file_exists(const std::string &name)
 
 std::string Helper::fromDecimal(ullint n, ullint b)
 {
-    std::string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    std::ostringstream os;
-    while(n > 0)
+    char buffer[9];
+    buffer[8] = '\0';
+    int c;
+    for(int i = 7; i >= 0; --i)
     {
-        os << chars.at(n % b);
+        c = n % b;
+        buffer[i] = c < 10 ? 48+c : 55+c;
         n /= b;
     }
 
-    return os.str();
+    return strdup(buffer);
 }

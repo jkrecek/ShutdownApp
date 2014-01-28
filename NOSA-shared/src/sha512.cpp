@@ -57,22 +57,22 @@ const ullint Sha512::H[8] = {
 
 ullint Sha512::ch(ullint x, ullint y, ullint z)
 {
- return (x&y) ^ (~x&z);
+    return (x&y) ^ (~x&z);
 }
 
 ullint Sha512::maj(ullint x, ullint y, ullint z)
 {
- return (x&y) ^ (y&z) ^ (z&x);
+    return (x&y) ^ (y&z) ^ (z&x);
 }
 
 ullint Sha512::fn0(ullint x)
 {
- return rotr(x, 28) ^ rotr(x, 34) ^ rotr(x, 39);
+    return rotr(x, 28) ^ rotr(x, 34) ^ rotr(x, 39);
 }
 
 ullint Sha512::fn1(ullint x)
 {
- return rotr(x, 14) ^ rotr(x, 18) ^ rotr(x, 41);
+    return rotr(x, 14) ^ rotr(x, 18) ^ rotr(x, 41);
 }
 
 ullint Sha512::sigma0(ullint x)
@@ -140,21 +140,20 @@ Sha512::Sha512(const char *text)
     std::vector<Block> M(num_blk, Block());
     split(M, msg_arr);
 
-
     for(uint i=0; i<num_blk; i++)
     {
         std::vector<ullint> W(80, 0);
-        for(uint t=0; t<16; t++)
+        for(uint t = 0; t < 16; ++t)
             W[t] = M[i].msg[t];
 
-        for(uint t=16; t<80; t++)
+        for(uint t = 16; t < 80; ++t)
             W[t] = sigma1(W[t-2]) + W[t-7] + sigma0(W[t-15]) + W[t-16];
 
         ullint work[8];
-        for(uint i=0; i<8; i++)
+        for(uint i=0; i < 8; i++)
             work[i] = hash[i];
 
-        for(uint t=0; t<80; t++)
+        for(uint t = 0; t < 80; t++)
         {
             ullint t1, t2;
             t1 = work[7] + fn1(work[4]) + ch(work[4], work[5], work[6]) + K[t] + W[t];
