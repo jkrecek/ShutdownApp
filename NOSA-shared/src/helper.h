@@ -9,6 +9,9 @@
 #include "ipaddress.h"
 
 typedef std::vector<std::string> StringVector;
+typedef unsigned int uint;
+typedef unsigned long long ullint;
+
 class Helper
 {
 public:
@@ -23,6 +26,7 @@ public:
     static const char* stripNewLine(const char* ori);
     static void printBytes(char** bytes, unsigned printMax = 0);
     static bool file_exists(const std::string& name);
+    static std::string fromDecimal(ullint n, ullint b);
 
 #ifdef _WIN32
     static std::string GetSZValueUnique( HKEY openKey, const char* regkey, const char* keyName );

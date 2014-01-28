@@ -214,3 +214,16 @@ bool Helper::file_exists(const std::string &name)
     struct stat fileInfo;
     return stat(name.c_str(), &fileInfo) == 0;
 }
+
+std::string Helper::fromDecimal(ullint n, ullint b)
+{
+    std::string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    std::ostringstream os;
+    while(n > 0)
+    {
+        os << chars.at(n % b);
+        n /= b;
+    }
+
+    return os.str();
+}
