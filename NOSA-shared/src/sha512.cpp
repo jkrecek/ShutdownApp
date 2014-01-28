@@ -140,16 +140,6 @@ Sha512::Sha512(const char *text)
     std::vector<Block> M(num_blk, Block());
     split(M, msg_arr);
 
-    ullint H[] = {
-        0x6a09e667f3bcc908ULL,
-        0xbb67ae8584caa73bULL,
-        0x3c6ef372fe94f82bULL,
-        0xa54ff53a5f1d36f1ULL,
-        0x510e527fade682d1ULL,
-        0x9b05688c2b3e6c1fULL,
-        0x1f83d9abfb41bd6bULL,
-        0x5be0cd19137e2179ULL
-    };
 
     for(uint i=0; i<num_blk; i++)
     {
@@ -162,7 +152,7 @@ Sha512::Sha512(const char *text)
 
         ullint work[8];
         for(uint i=0; i<8; i++)
-            work[i] = H[i];
+            work[i] = hash[i];
 
         for(uint t=0; t<80; t++)
         {
@@ -180,19 +170,8 @@ Sha512::Sha512(const char *text)
         }
 
         for(uint i=0; i<8; i++)
-            H[i] = work[i] + H[i];
+            hash[i] = work[i] + hash[i];
     }
-
-    /*for(uint i=0; i<8; i++)
-        cout << H[i] << " ";
-
-    cout << endl;
-
-    cout << endl << endl << endl << "****************SHA 512 MESSAGE DIGEST IN HEX****************" << endl << endl;
-    for(uint i=0; i<8; i++)
-        cout << fromDecimal(H[i], 16) << " ";
-
-    cout << endl;*/
 }
 
 Sha512::Block::Block(std::string p_msg)
