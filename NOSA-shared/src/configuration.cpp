@@ -78,13 +78,13 @@ bool Configuration::isEmpty(std::string key)
 const char* Configuration::isValid()
 {
     if (isEmpty("REMOTE_ADDRESS") || isEmpty("USER") || isEmpty("PASS"))
-        return "You must fill all required fields, please check dist file for needed params";
+        return "You must fill all required fields, please check config.conf.dist file for needed params";
 
     if (getString("USER").length() < 4)
         return "Your username must have atleast 5 characters";
 
-    if (getString("PASS").length() < 5)
-        return "Your password must have atleast 5 characters";
+    if (getString("PASS").length() != 128)
+        return "Your password must be hashed string";
 
     return NULL;
 }

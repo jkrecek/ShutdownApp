@@ -3,6 +3,7 @@
 #include <tlhelp32.h>
 #include "helper.h"
 #include "defines.h"
+#include "sha512.h"
 
 #ifdef __WIN32
     #include <direct.h>
@@ -193,13 +194,19 @@ void WinWindow::addItem(int id, const char* type, const char *currentText, int x
 
 void WinWindow::doSave()
 {
+    if (const char* error = checkValues())
+    {
+        MessageBox(NULL, error, "Error!",  MB_ICONERROR | MB_OK);
+        return;
+    }
+
     m_config->setValue("REMOTE_ADDRESS", getText(EDIT_ADDRESS));
     m_config->setValue("USER", getText(EDIT_USERNAME));
-    m_config->setValue("PASS", getText(EDIT_PASSWORD));
+    m_config->setValue("PASS", Sha512(getText(EDIT_PASSWORD)).to_string());
 
     m_config->save();
 
-    MessageBox(NULL, "Server connection info saved.", "Success!",  MB_ICONINFORMATION | MB_OK);
+    MessageBox(NULL, "Server connection info successfully saved.", "Success!",  MB_ICONINFORMATION | MB_OK);
 }
 
 void WinWindow::doRun(bool asService)
@@ -360,4 +367,22 @@ void WinWindow::doTerminateAll()
     terminateProcesses(serverExecutable);
 
     MessageBox(NULL, "All NOSA servers are beeing terminated.", "Done!", MB_ICONINFORMATION | MB_OK);
+}
+
+const char* WinWindow::checkValues()
+{
+    const char* address =  getText(EDIT_ADDRESS);
+    const char* username = getText(EDIT_USERNAME);
+    const char* password = getText(EDIT_PASSWORD);
+
+    if (!address || !strlen(address) || !username || !strlen(username) || !password || !strlen(password))
+        return "All fields must be filled before saving.";
+
+    if (strlen(username) < 4)
+        return "Your username must be at least 5 characters long.";
+
+    if (strlen(password) < 5)
+        return "Your username must be at least 5 characters long.";
+
+    return NULL;
 }

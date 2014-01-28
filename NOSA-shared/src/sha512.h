@@ -21,9 +21,7 @@ private:
         public:
         std::vector<ullint> msg;
 
-        Block():msg(16, 0) { }
-
-        Block(std::string p_msg);
+        Block();
     };
 
     static void makeblock(std::vector<ullint>& ret, std::string p_msg);

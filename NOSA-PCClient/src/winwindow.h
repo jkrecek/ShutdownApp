@@ -49,6 +49,8 @@ private:
     void doRunOnStart();
     void doTerminateAll();
 
+    const char* checkValues();
+
     std::string getExecutablePath(bool asService);
 
     const char* getText(Field field);

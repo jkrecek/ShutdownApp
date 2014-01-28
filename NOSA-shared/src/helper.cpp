@@ -217,13 +217,13 @@ bool Helper::file_exists(const std::string &name)
 
 std::string Helper::fromDecimal(ullint n, ullint b)
 {
-    char buffer[9];
-    buffer[8] = '\0';
+    char buffer[17];
+    buffer[16] = '\0';
     int c;
-    for(int i = 7; i >= 0; --i)
+    for(int i = 15; i >= 0; --i)
     {
         c = n % b;
-        buffer[i] = c < 10 ? 48+c : 55+c;
+        buffer[i] = c < 10 ? 48+c : 87+c;
         n /= b;
     }
 

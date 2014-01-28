@@ -119,7 +119,6 @@ std::string Sha512::mynum(ullint x)
 }
 
 Sha512::Sha512(const char *text)
-    //: hash(Sha512::H)
 {
     memcpy(hash, Sha512::H, sizeof(ullint) * 8);
     std::string msg_arr, msg;
@@ -140,7 +139,7 @@ Sha512::Sha512(const char *text)
     std::vector<Block> M(num_blk, Block());
     split(M, msg_arr);
 
-    for(uint i=0; i<num_blk; i++)
+    for(uint i = 0; i < num_blk; i++)
     {
         std::vector<ullint> W(80, 0);
         for(uint t = 0; t < 16; ++t)
@@ -173,11 +172,9 @@ Sha512::Sha512(const char *text)
     }
 }
 
-Sha512::Block::Block(std::string p_msg)
+Sha512::Block::Block()
     : msg(16, 0)
-{
-    Sha512::makeblock(msg, p_msg);
-}
+{ }
 
 std::string Sha512::to_string()
 {
