@@ -8,6 +8,7 @@
 #ifdef __WIN32
     #include <direct.h>
     #define GetCurrentDir _getcwd
+    #include "../res/resources.h"
 #else
     #include <unistd.h>
     #define GetCurrentDir getcwd
@@ -31,12 +32,12 @@ WinWindow::WinWindow(HINSTANCE instance, int nCmdShow)
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = m_instance;
-    wc.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
+    wc.hIcon         = LoadIcon(m_instance, MAKEINTRESOURCE(APP_ICON));
+    wc.hIconSm       = LoadIcon(m_instance, MAKEINTRESOURCE(APP_ICON));
     wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
     wc.lpszMenuName  = NULL;
     wc.lpszClassName = appName;
-    wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
 
     if (!RegisterClassEx(&wc))
     {
