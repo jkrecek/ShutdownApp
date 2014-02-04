@@ -1,6 +1,10 @@
 #include "sha512.h"
 #include <sstream>
 
+#ifndef __WIN32
+    #include <string.h>
+#endif
+
 const ullint Sha512::K[80] = {
     0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL,
     0xb5c0fbcfec4d3b2fULL, 0xe9b5dba58189dbbcULL,
