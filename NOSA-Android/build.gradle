@@ -35,4 +35,5 @@ android {
 
 dependencies {
     compile 'org.jsoup:jsoup:1.7.+'
+    compile 'com.google.code.gson:gson:2.2.+'
 }

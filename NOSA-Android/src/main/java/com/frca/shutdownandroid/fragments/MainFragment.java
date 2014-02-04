@@ -14,13 +14,15 @@ import android.widget.TextView;
 import com.frca.shutdownandroid.R;
 import com.frca.shutdownandroid.classes.Connection;
 import com.frca.shutdownandroid.classes.ControlAction;
+import com.frca.shutdownandroid.classes.DirectConnection;
+import com.frca.shutdownandroid.classes.ProxyConnection;
 
 /**
  * Created by KillerFrca on 1.12.13.
  */
 public class MainFragment extends BaseFragment {
 
-    private static final String EXTRA_IP = "ip";
+    private static final String EXTRA_ID = "id";
 
     private Connection connection;
 
@@ -33,10 +35,10 @@ public class MainFragment extends BaseFragment {
     private Fragment currentChildFragment;
 
 
-    public static final MainFragment newInstance(String ip) {
+    public static final MainFragment newInstance(int id) {
         MainFragment f = new MainFragment();
         Bundle bdl = new Bundle();
-        bdl.putString(EXTRA_IP, ip);
+        bdl.putInt(EXTRA_ID, id);
         f.setArguments(bdl);
         return f;
     }
@@ -45,22 +47,25 @@ public class MainFragment extends BaseFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String ip = getArguments().getString(EXTRA_IP);
-        connection = getMainActivity().getConnectionForIp(ip);
+        int id = getArguments().getInt(EXTRA_ID);
+        connection = getMainActivity().getConnection(id);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         LinearLayout layoutView = (LinearLayout) inflater.inflate(R.layout.fragment_main, container, false);
+        if (layoutView == null)
+            return null;
+
         text_connetion = (TextView) layoutView.findViewById(R.id.text_connection);
         layout_state = (LinearLayout) layoutView.findViewById(R.id.layout_state);
         image_state = (ImageView) layoutView.findViewById(R.id.image_state);
         text_state = (TextView) layoutView.findViewById(R.id.text_state);
         progress = (ProgressBar) layoutView.findViewById(R.id.progress);
 
-        //String header = String.format();
-        text_connetion.setText(getString(R.string.connection_header, connection.getIp()));
+        int resourceId = connection.getType() == Connection.ConnectionType.DIRECT ? R.string.connection_header_direct : R.string.connection_header_proxy;
+        text_connetion.setText(getString(resourceId, connection.getStringIdentifier()));
 
         ImageButton button_refresh = (ImageButton) layoutView.findViewById(R.id.button_refresh);
         button_refresh.setOnClickListener(new View.OnClickListener() {

@@ -2,49 +2,85 @@ package com.frca.shutdownandroid;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Patterns;
-import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.frca.shutdownandroid.Helpers.Helper;
 import com.frca.shutdownandroid.adapters.ConnectionArrayAdapter;
 import com.frca.shutdownandroid.classes.Connection;
+import com.frca.shutdownandroid.classes.ConnectionList;
+import com.frca.shutdownandroid.classes.ProxyConnection;
 import com.frca.shutdownandroid.fragments.MainFragment;
 import com.frca.shutdownandroid.network.NetworkThread;
+import com.google.gson.Gson;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 public class MainActivity extends Activity implements ActionBar.OnNavigationListener {
-
-    private static final String KEY_CONNECTIONS = "connections";
-
     private static final String NAVIGATION_IDX = "navi_idx";
 
     private NetworkThread thread;
 
-    private List<Connection> connections = new ArrayList<Connection>();
+    private ConnectionList connections;
 
     private MainFragment currentFragment;
 
     private boolean running = false;
+
+    private enum AddAction {
+        DIRECT(R.drawable.network_connection_w, R.string.add_direct, addDirectListener),
+        PROXY(R.drawable.proxy_server_add, R.string.add_proxy, addProxyListener);
+
+        private int iconRes;
+        private int textRes;
+        private OnDialogClickListener listener;
+        private AddAction(int iconRes, int textRes, OnDialogClickListener listener) {
+            this.iconRes = iconRes;
+            this.textRes = textRes;
+            this.listener = listener;
+        }
+
+        public int getIconRes() {
+            return iconRes;
+        }
+
+        public int getTextRes() {
+            return textRes;
+        }
+
+        public View.OnClickListener getListener() {
+            return new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    AlertDialog originalDialog = (AlertDialog) ((View)view.getParent()).getTag();
+                    originalDialog.dismiss();;
+                    Context context = view.getContext();
+                    if (context instanceof MainActivity)
+                        listener.onClick((MainActivity) context);
+                }
+            };
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,12 +90,25 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
 
         setContentView(R.layout.activity_main);
 
-        loadConnections();
+        connections = ConnectionList.loadFromPrefs(getPreferences(this));
+
+        /*Gson gson = new Gson();
+        new AlertDialog.Builder(this).setTitle("json")
+                .setMessage(gson.toJson(connections.toArray()))
+                .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .create()
+                .show();*/
+
 
         if (connections.isEmpty())
             getActionBar().setTitle("Add connection");
         else {
-            displayAdapter(false);
+            reloadAdapter(false);
 
             int idx = savedInstanceState != null ? savedInstanceState.getInt(NAVIGATION_IDX) : 0;
             if (idx == 0)
@@ -104,11 +153,13 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_add: {
-                EditText editText = getActionBarEditText();
+                /* TODO add window create*/
+                showRequestCredentialsDialog();
+                /*EditText editText = getActionBarEditText();
                 if (editText == null)
                     displayEditText();
                 else
-                    onEditTextConfirm(editText);
+                    onEditTextConfirm(editText);*/
                 return true;
             }
         }
@@ -116,20 +167,54 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
         return super.onOptionsItemSelected(item);
     }
 
-    private void displayAdapter(boolean isUpdate) {
+    private void reloadAdapter(boolean isUpdate) {
         final ActionBar actionBar = getActionBar();
-        actionBar.setCustomView(null);
-        Connection[] conns = connections.toArray(new Connection[connections.size()]);
+        if (actionBar == null)
+            return;
+
+        Connection[] conns = connections.toArray();
         ConnectionArrayAdapter adapter = new ConnectionArrayAdapter(this, conns);
         actionBar.setListNavigationCallbacks(adapter, this);
         actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME);
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
 
-        if (isUpdate)
-            saveConnections();
+        if (isUpdate) {
+            connections.saveToPrefs(getPreferences(this));
+            actionBar.setSelectedNavigationItem(conns.length -1);
+        }
     }
 
-    private void displayEditText() {
+    private AlertDialog showRequestCredentialsDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        final LinearLayout layout = (LinearLayout) inflater.inflate(R.layout.dialog_multiline, null);
+
+        for (AddAction type : AddAction.values()) {
+            final View view = inflater.inflate(R.layout.dialog_line_item, null);
+            ((ImageView)view.findViewById(R.id.icon)).setImageResource(type.getIconRes());
+            ((TextView)view.findViewById(R.id.text)).setText(type.getTextRes());
+            view.setOnClickListener(type.getListener());
+            layout.addView(view);
+        }
+
+        builder.setTitle("Select connection type")
+            .setView(layout)
+            .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.dismiss();
+                }
+            });
+
+        AlertDialog d = builder.create();
+        d.show();
+        layout.setTag(d);
+        return d;
+
+    }
+
+    /*private void displayEditText() {
         final ActionBar actionBar = getActionBar();
 
         actionBar.setCustomView(R.layout.edit_text);
@@ -155,7 +240,7 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
 
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_CUSTOM);
-    }
+    }*/
 
     private EditText getActionBarEditText() {
         View view = getActionBar().getCustomView();
@@ -168,7 +253,7 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
         return null;
     }
 
-    private void onEditTextConfirm(EditText editText) {
+    /*private void onEditTextConfirm(EditText editText) {
         final String inputIp = editText.getText().toString();
         if (TextUtils.isEmpty(inputIp)) {
             editText.setError("Enter new IP Address");
@@ -242,7 +327,7 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
                                 connections.add(new Connection(inputIp, responseMAC, hostname));
                             }
 
-                            displayAdapter(true);
+                            reloadAdapter(true);
                         }
                     }.execute();
                 }
@@ -253,34 +338,13 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
                 }
             }
         );
-    }
+    }*/
 
     public NetworkThread getThread() {
         if (thread == null)
             thread = new NetworkThread(this);
 
         return thread;
-    }
-
-    private void loadConnections() {
-        connections.clear();
-        Set<String> conn_set = getPreferences(MODE_PRIVATE).getStringSet(KEY_CONNECTIONS, null);
-        if (conn_set == null)
-            return;
-
-        for (String s : conn_set) {
-            String parts[] = s.split("\n");
-            connections.add(new Connection(parts[0], parts[1], parts[2]));
-        }
-    }
-
-    private void saveConnections() {
-        SharedPreferences prefs = getPreferences(MODE_PRIVATE);
-        Set<String> conn_set = new HashSet<String>();
-        for (Connection con : connections)
-            conn_set.add(con.getIp() + "\n" + con.getMac() + "\n" + con.getHostname());
-
-        prefs.edit().putStringSet(KEY_CONNECTIONS, conn_set).commit();
     }
 
     private TextView getChildText(LinearLayout parent) {
@@ -295,10 +359,10 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
 
     @Override
     public boolean onNavigationItemSelected(int i, long l) {
-        MainActivity.getPreferences(this).edit().putInt(NAVIGATION_IDX, i).commit();
-        Fragment fragment = getFragmentManager().findFragmentById(R.id.container);
-        Connection connection = connections.get(i);
-        currentFragment = MainFragment.newInstance(connection.getIp());
+        getPreferences(this).edit().putInt(NAVIGATION_IDX, i).commit();
+        //Fragment fragment = getFragmentManager().findFragmentById(R.id.container); ??? TODO
+        Connection connection = (Connection) connections.valueAt(i);
+        currentFragment = MainFragment.newInstance(connection.getGeneratedId());
         getThread().setConnection(connection);
 
         if (running)
@@ -325,22 +389,112 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
         finish();
     }
 
-    public static SharedPreferences getPreferences(Context context) {
-        return context.getSharedPreferences(context.getApplicationInfo().name, Context.MODE_PRIVATE);
+    public boolean checkProxyConnectionInfo(EditText username, EditText password) {
+        String strUser = username.getText().toString();
+        String strPass = password.getText().toString();
+
+        if (TextUtils.isEmpty(strUser)) {
+            username.setError("You must enter valid username");
+            return false;
+        }
+
+        if (strUser.length() < 4) {
+            username.setError("Your username must be at least 5 characters long");
+            return false;
+        }
+
+        if (TextUtils.isEmpty(strPass)) {
+            password.setError("You must enter valid password");
+            return false;
+        }
+
+        if (strPass.length() < 5) {
+            password.setError("Your password must be at least 5 characters long");
+            return false;
+        }
+        return true;
     }
 
-    public Connection getConnectionForIp(String ip) {
-        if (ip == null)
-            return null;
+    public void establishInitialProxyConnection(final ProxyConnection connection) {
+        NetworkThread nt = getThread();
+        nt.sendMessage(connection, "STATUS", new NetworkThread.OnMessageReceived() {
+                @Override
+                public void messageReceived(final String response) {
+                    if (response.equals("ONLINE")) {
+                        connections.add(connection);
+                        reloadAdapter(true);
+                    } else if (response.equals("OFFLINE")) {
+                        Helper.showDialog(MainActivity.this, "Failure", "No computer is connected on proxy server with such login details.");
+                    } else {
+                        Helper.showDialog(MainActivity.this, "Failure", "Unexpected response.");
+                        Log.e("Proxy connection", "Unexpected response: " + response);
+                    }
+                }
+            }, new NetworkThread.OnExceptionReceived() {
+                @Override
+                public void exceptionReceived(Exception e) {
+                    Helper.showDialog(MainActivity.this, "Error", "We apologize, proxy server seems to be offline.");
+                }
+            }
+        );
+    }
 
-        for (Connection connection : connections)
-            if (connection.getIp().equals(ip))
-                return connection;
+    public static SharedPreferences getPreferences(Context context) {
+        return context.getSharedPreferences(MainActivity.class.getSimpleName(), Context.MODE_PRIVATE);
+    }
 
-        return null;
+    public Connection getConnection(int generatedId) {
+        return (Connection) connections.get(generatedId);
     }
 
     public Fragment getCurrentFragment() {
         return getFragmentManager().findFragmentById(R.id.container);
+    }
+
+    private static OnDialogClickListener addDirectListener = new OnDialogClickListener() {
+        @Override
+        public void onClick(MainActivity activity) {
+
+        }
+    };
+
+    private static OnDialogClickListener addProxyListener = new OnDialogClickListener() {
+        @Override
+        public void onClick(final MainActivity activity) {
+            LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            final LinearLayout layout = (LinearLayout) inflater.inflate(R.layout.dialog_username_password, null);
+            new AlertDialog.Builder(activity)
+                .setTitle("Set proxy connection")
+                .setView(layout)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        EditText userName = (EditText)layout.findViewById(R.id.edit1);
+                        EditText password = (EditText)layout.findViewById(R.id.edit2);
+                        if (activity.checkProxyConnectionInfo(userName, password)) {
+                            ProxyConnection connection = new ProxyConnection(
+                                userName.getText().toString(),
+                                Helper.hashPassword(password.getText().toString())
+                            );
+
+                            activity.establishInitialProxyConnection(connection);
+                        }
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, dismissListener)
+                .create()
+                .show();
+        }
+    };
+
+    public static DialogInterface.OnClickListener dismissListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialogInterface, int i) {
+            dialogInterface.dismiss();
+        }
+    };
+
+    public static interface OnDialogClickListener {
+        public void onClick(MainActivity activity);
     }
 }

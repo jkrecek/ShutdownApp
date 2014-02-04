@@ -5,7 +5,9 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.frca.shutdownandroid.Helpers.Helper;
+import com.frca.shutdownandroid.MainActivity;
 import com.frca.shutdownandroid.classes.Connection;
+import com.frca.shutdownandroid.classes.DirectConnection;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -22,6 +24,7 @@ import java.util.regex.Pattern;
  */
 public class NetworkThread /*extends Thread implements Runnable */ {
 
+    public static final String KEY_PROXY_HOST = "proxy_host";
     public static final int SERVER_PORT = 3691;
     public static final int CONNECT_TIMEOUT = 2000;
     public static final int STREAM_TIMEOUT = 15000;
@@ -48,20 +51,20 @@ public class NetworkThread /*extends Thread implements Runnable */ {
 
     public void sendMessage(String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
         Command command = new Command(createPacket(message), messageReceived, exceptionReceived);
-        run(connection.getIp(), command);
+        run(getConnectIp(connection), command);
     }
 
-    public void sendMessage(String ipAddress, String message) {
-        sendMessage(ipAddress, message, defaultMessageReceiver);
+    public void sendMessage(Connection connection, String message) {
+        sendMessage(connection, message, defaultMessageReceiver);
     }
 
-    public void sendMessage(String ipAddress, String message, OnMessageReceived messageReceived) {
-        sendMessage(ipAddress, message, messageReceived, defaultExceptionReceiver);
+    public void sendMessage(Connection connection, String message, OnMessageReceived messageReceived) {
+        sendMessage(connection, message, messageReceived, defaultExceptionReceiver);
     }
 
-    public void sendMessage(String ipAddress, String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
+    public void sendMessage(Connection connection, String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
         Command command = new Command(createPacket(message), messageReceived, exceptionReceived);
-        run(ipAddress, command);
+        run(getConnectIp(connection), command);
     }
 
     public NetworkTask run(String ipAddress, Command command) {
@@ -82,7 +85,7 @@ public class NetworkThread /*extends Thread implements Runnable */ {
 
 
     public static Socket createSocket(String ipAddress) throws IOException {
-        Log.i("Network", "Sock: Connecting");
+        Log.i("Network", "Sock: Connecting to `" + ipAddress + "`");
 
         long cur = System.currentTimeMillis();
         Socket socket = new Socket();
@@ -122,14 +125,16 @@ public class NetworkThread /*extends Thread implements Runnable */ {
     }
 
     public void pingConnection(Connection connection, final Connection.PingResult resultCallback) {
-        sendMessage(connection.getIp(), "GET_MAC " + connection.getIp(), new OnMessageReceived() {
+        sendMessage(connection, "STATUS", new OnMessageReceived() {
             @Override
-            public void messageReceived(String responseMAC) {
-                boolean success = true;
-                if (!NetworkThread.MAC_ADDRESS.matcher(responseMAC).matches())
-                    success = false;
+            public void messageReceived(String response) {
+                // TODO
+                /*boolean success = true;
 
-                resultCallback.result(success);
+                if (!NetworkThread.MAC_ADDRESS.matcher(responseMAC).matches())
+                    success = false;*/
+
+                resultCallback.result(response.equals("ONLINE"));
             }
         }, new OnExceptionReceived() {
             @Override
@@ -137,6 +142,14 @@ public class NetworkThread /*extends Thread implements Runnable */ {
                 resultCallback.result(false);
             }
         });
+    }
+
+    private String getConnectIp(Connection connection) {
+        if (connection.getType() == Connection.ConnectionType.DIRECT)
+            return ((DirectConnection)connection).getIp();
+        else {
+            return MainActivity.getPreferences(context).getString(KEY_PROXY_HOST, "54.194.222.199");
+        }
     }
 
     public void setConnection(Connection connection) {
@@ -169,7 +182,7 @@ public class NetworkThread /*extends Thread implements Runnable */ {
         @Override
         public void exceptionReceived(Exception e) {
             if (e instanceof SocketTimeoutException) {
-                Helper.showDialog(context, "Connection error", "App could not connect to host `" + getConnection().getIp() + "`, port `" + NetworkThread.SERVER_PORT + "`" );
+                Helper.showDialog(context, "Connection error", "App could not connect to host `" + getConnection().getStringIdentifier() + "`, port `" + NetworkThread.SERVER_PORT + "`" );
                 e.printStackTrace();
                 return;
             }
@@ -177,4 +190,5 @@ public class NetworkThread /*extends Thread implements Runnable */ {
             Helper.showDialog(context, "Unhandled exception", Helper.getStackTrace(e));
         }
     };
+
 }

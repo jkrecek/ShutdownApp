@@ -7,11 +7,16 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.frca.shutdownandroid.MainActivity;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 
 /**
  * Created by KillerFrca on 7.12.13.
@@ -87,12 +92,10 @@ public abstract class Helper {
 
 
     public static void showDialog(Context context, String title, String message) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(context).setTitle(title).setMessage(message).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.dismiss();
-            }
-        });
+        final AlertDialog.Builder builder = new AlertDialog.Builder(context)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton(android.R.string.ok, MainActivity.dismissListener);
 
         runOnUiThread(new Runnable() {
             @Override
@@ -119,5 +122,18 @@ public abstract class Helper {
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         }
+    }
+
+    public static String hashPassword(String flatPassword) {
+        MessageDigest mda = null;
+        try {
+            mda = MessageDigest.getInstance("SHA-512", "BC");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (NoSuchProviderException e) {
+            e.printStackTrace();
+        }
+        byte [] digest = mda.digest(flatPassword.getBytes());
+        return new String(digest);
     }
 }

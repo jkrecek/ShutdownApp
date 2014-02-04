@@ -4,8 +4,11 @@
     <string name="app_name">ShutdownApp</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-    <string name="connection_header">Connection to %1$s is:</string>
+    <string name="connection_header_direct">Connection to %1$s is:</string>
+    <string name="connection_header_proxy">Connection with username %1$s is:</string>
     <string name="online">Online</string>
     <string name="offline">Offline</string>
+    <string name="add_direct">Direct connection</string>
+    <string name="add_proxy">Proxy connection</string>
 
 </resources>

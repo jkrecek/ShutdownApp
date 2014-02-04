@@ -24,6 +24,8 @@ import com.frca.shutdownandroid.R;
 import com.frca.shutdownandroid.adapters.ControlGridAdapter;
 import com.frca.shutdownandroid.classes.Connection;
 import com.frca.shutdownandroid.classes.ControlAction;
+import com.frca.shutdownandroid.classes.DirectConnection;
+import com.frca.shutdownandroid.classes.ProxyConnection;
 import com.frca.shutdownandroid.network.NetworkThread;
 import com.frca.shutdownandroid.network.http.HttpTask;
 
@@ -150,7 +152,9 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
     public static ControlAction.OnActionClick turnOnControlClick = new ControlAction.OnActionClick() {
         @Override
         public void call(MainFragment fragment, ControlAction action, NetworkThread thread) {
-            Helper.sendWoLMagicPacket(thread.getConnection().getIp(), thread.getConnection().getMac());
+            Connection connection = thread.getConnection();
+            String ip = connection.getType() == Connection.ConnectionType.DIRECT ? ((DirectConnection)connection).getIp() : ((ProxyConnection)connection).getLocalIp();
+            Helper.sendWoLMagicPacket(ip, connection.getMac());
         }
     };
 
@@ -193,12 +197,7 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
                         return;
 
                     final AlertDialog.Builder builder = new AlertDialog.Builder(fragment.getActivity());
-                    builder.setTitle("Data").setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.dismiss();
-                        }
-                    });
+                    builder.setTitle("Data").setPositiveButton(android.R.string.ok, MainActivity.dismissListener);
 
                     final AlertDialog dialog = builder.create();
                     //currentMessage = "";
@@ -275,12 +274,8 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
                     bar.setProgress((int) (value * 1000));
                     builder.setTitle("Set Volume")
                         .setView(view)
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                dialogInterface.dismiss();
-                            }
-                        }).create().show();;
+                        .setPositiveButton(android.R.string.ok, MainActivity.dismissListener)
+                        .create().show();;
                 }
             });
         }
@@ -309,12 +304,7 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
                         String packetString = usernameView.getText().toString();
                         thread.sendMessage(packetString);
                     }
-                }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                }
-            }).create().show();
+                }).setNegativeButton(android.R.string.cancel, MainActivity.dismissListener).create().show();
         }
     };
 }
