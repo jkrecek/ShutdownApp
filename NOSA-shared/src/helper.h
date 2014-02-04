@@ -24,9 +24,11 @@ public:
     static const char* to_string(int val);
     static const char* to_string(float val);
     static const char* stripNewLine(const char* ori);
+    static size_t position_of_char(const char* text, char ch);
     static void printBytes(char** bytes, unsigned printMax = 0);
     static bool file_exists(const std::string& name);
     static std::string fromDecimal(ullint n, ullint b);
+    static char* strndup(const char* s, size_t n);
 
 #ifdef _WIN32
     static std::string GetSZValueUnique( HKEY openKey, const char* regkey, const char* keyName );

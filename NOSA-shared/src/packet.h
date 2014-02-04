@@ -11,6 +11,9 @@ public:
     unsigned getRequestId() const { return m_requestId; }
     const char* getMessage() const { return m_message; }
     unsigned getSize() const;
+    bool isCommand(const char* command);
+    const char* getCommand();
+    const char* getParameters();
 
     Packet* responsePacket(const char* message);
     void respond(const char* message);

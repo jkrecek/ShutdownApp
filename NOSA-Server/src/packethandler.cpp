@@ -19,7 +19,7 @@ PacketHandler::PacketHandler(MainSocket *_socket)
 
 void PacketHandler::accepted(Packet *packet)
 {
-    std::string line = packet->getMessage();
+    /*std::string line = packet->getMessage();
     std::size_t firstSpace = line.find(" ");
     std::string command , arguments;
     if (firstSpace == std::string::npos)
@@ -28,9 +28,9 @@ void PacketHandler::accepted(Packet *packet)
     {
         command = line.substr(0, firstSpace);
         arguments = line.substr(firstSpace);
-    }
+    }*/
 
-    Command controlCommand = sPCControl.getCommand(command);
+    Command controlCommand = sPCControl.getCommand(packet->getCommand());
     if (controlCommand != NONE)
     {
         const char* result = sPCControl.execute(controlCommand);
@@ -38,17 +38,17 @@ void PacketHandler::accepted(Packet *packet)
         return;
     }
 
-    if (command == "GET_MAC")
+    if (packet->isCommand("GET_MAC"))
     {
-        IpAddress serverIp = !arguments.empty() ? IpAddress(arguments.c_str()) : NULL;
+        IpAddress serverIp = packet->getParameters();
         const char * mac = socket->getMAC(&serverIp);
         socket->sendResponse(packet, mac);
         return;
     }
 
-    if (command == "TORRENT")
+    if (packet->isCommand("TORRENT"))
     {
-        std::vector<std::string> series = getArgsByQuotation(arguments, true);
+        std::vector<std::string> series = getArgsByQuotation(packet->getParameters(), true);
         std::list<EpisodeTorrent> torrents = getTorrentMagnets(packet);
 
         filterTorrents(series, torrents);
@@ -62,7 +62,7 @@ void PacketHandler::accepted(Packet *packet)
         return;
     }
 
-    if (command == "GET_VOLUME")
+    if (packet->isCommand("GET_VOLUME"))
     {
         float volume = sPCControl.getVolumeLevel();
         const char* volumeLevel = Helper::to_string(volume);
@@ -71,9 +71,9 @@ void PacketHandler::accepted(Packet *packet)
         return;
     }
 
-    if (command == "SET_VOLUME")
+    if (packet->isCommand("SET_VOLUME"))
     {
-        float value = atof(arguments.c_str());
+        float value = atof(packet->getParameters());
         sPCControl.setVolumeLevel(value);
         socket->sendResponse(packet, "OK");
         return;

@@ -19,7 +19,7 @@ void AndroidConnection::redistributePacket(Packet *packet)
 
 bool AndroidConnection::handlePacket(Packet *packet)
 {
-    if (packet->getMessage() == "STATUS")
+    if (packet->isCommand("STATUS"))
     {
         PCConnection* con = sConnections.getPCConnection(this);
         socket->sendResponse(packet, con ? "ONLINE" : "OFFLINE");

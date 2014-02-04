@@ -6,7 +6,8 @@ aux_source_directory(src SRC_LIST)
 
 #add source-less headers
 set(SRC_LIST ${SRC_LIST}
-    src/defines.h)
+    src/defines.h
+    src/singleton.h)
 
 if(BUILD_PROJECT_STATIC)
     add_library(${TARGET_NAME} STATIC ${SRC_LIST})

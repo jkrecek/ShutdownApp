@@ -185,16 +185,20 @@ const char* Helper::stripNewLine(const char* ori)
 {
     if (ori[strlen(ori)-1] == '\n')
     {
-    #ifdef _WIN32
-        char* res = strdup(ori);
-        res[strlen(res)-1] = 0;
-        return res;
-    #else
         return strndup(ori, strlen(ori)-1);
-    #endif
     }
 
     return ori;
+}
+
+char* Helper::strndup(const char *s, size_t n) {
+#ifdef _WIN32
+    char* res = (char*)malloc(n+1);
+    strncpy(res, s, n);
+    return res;
+#else
+    return ::strndup(ori, n);
+#endif
 }
 
 void Helper::printBytes(char **bytes, unsigned printMax)
@@ -228,4 +232,12 @@ std::string Helper::fromDecimal(ullint n, ullint b)
     }
 
     return strdup(buffer);
+}
+
+size_t Helper::position_of_char(const char *text, char ch) {
+    char* end;
+    if (!(end = (char*)memchr(text, ch, strlen(text))))
+        return std::string::npos;
+
+    return text - end;
 }

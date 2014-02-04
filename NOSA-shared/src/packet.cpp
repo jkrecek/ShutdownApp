@@ -68,3 +68,26 @@ Packet* Packet::responsePacket(const char *message)
     return packet;
 }
 
+bool Packet::isCommand(const char *command) {
+    const char* cmd = getCommand();
+    return cmd && strcmp(cmd, command) == 0;
+}
+
+const char* Packet::getCommand()
+{
+    size_t position = Helper::position_of_char(m_message, ' ');
+    if (position != std::string::npos)
+        return Helper::strndup(m_message, position);
+
+    return NULL;
+}
+
+const char* Packet::getParameters()
+{
+    char* end = (char*)memchr(m_message, ' ', strlen(m_message));
+    if (!end)
+        return NULL;
+
+    return strdup(end+1);
+}
+
