@@ -197,7 +197,7 @@ char* Helper::strndup(const char *s, size_t n) {
     strncpy(res, s, n);
     return res;
 #else
-    return ::strndup(ori, n);
+    return ::strndup(s, n);
 #endif
 }
 
