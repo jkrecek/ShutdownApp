@@ -20,9 +20,9 @@ BaseConnection::~BaseConnection()
 
 BaseConnection* BaseConnection::estabilishConnection(NetworkSocket *socket)
 {
-    Packet* packet = socket->readPacket();
+    Packet packet = socket->readPacket();
 
-    NVMap parameters = socket->parsePacket(packet->getMessage());
+    NVMap parameters = socket->parsePacket(packet.getMessage());
     if (!parameters.contains("type") ||
         !parameters.contains("user") ||
         !parameters.contains("pass"))
@@ -44,32 +44,24 @@ BaseConnection* BaseConnection::estabilishConnection(NetworkSocket *socket)
     connection->user = parameters.get("user");
     connection->pass = parameters.get("pass");
 
-    delete packet;
     return connection;
 
 }
 
 void BaseConnection::read()
 {
-    Packet* packet;
     try
     {
         while(socket && socket->isOpen())
         {
-            packet = socket->readPacket();
-
-            if (!packet)
-                continue;
+            Packet packet = socket->readPacket();
 
             /*if (packet->getMessage() == "CLOSE")
                 break;*/
 
-            if (!handlePacket(packet))
-                redistributePacket(packet);
-            delete packet;
+            if (!handlePacket(&packet))
+                redistributePacket(&packet);
         }
     }
     catch (SocketClosedException& /*e*/) { /* just interrupt */ }
-
-    delete packet;
 }

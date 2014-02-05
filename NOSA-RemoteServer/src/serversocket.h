@@ -12,9 +12,6 @@ public:
     NetworkSocket* acceptConnection();
 
     void close();
-
-//private:
-    //int port;
 };
 
 #endif // SERVERSOCKET_H

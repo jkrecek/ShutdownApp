@@ -30,10 +30,10 @@
 class NetworkSocket
 {
 public:
-    NetworkSocket(TCPSocket socket, sockaddr_in info);
+    NetworkSocket(TCPSocket socket, sockaddr_in& info);
     ~NetworkSocket();
 
-    Packet* readPacket();
+    Packet readPacket();
     NVMap parsePacket(std::string line);
 
     void close();

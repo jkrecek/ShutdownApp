@@ -5,7 +5,7 @@ class Packet
 {
 public:
     Packet(unsigned requestId, const char* message);
-    static Packet* fromBytes(char* bytes);
+    static Packet fromBytes(char* bytes);
     char* toBytes();
 
     unsigned getRequestId() const { return m_requestId; }

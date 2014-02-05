@@ -24,7 +24,7 @@
     #include <arpa/inet.h>
 #endif
 
-NetworkSocket::NetworkSocket(TCPSocket _socket, sockaddr_in _info)
+NetworkSocket::NetworkSocket(TCPSocket _socket, sockaddr_in& _info)
     : socket(_socket), info(_info), size(0), bufferPtr(buffer)
 {
 
@@ -35,11 +35,11 @@ NetworkSocket::~NetworkSocket()
     doClose();
 }
 
-Packet* NetworkSocket::readPacket()
+Packet NetworkSocket::readPacket()
 {
     char* bytes = readLine();
-    Packet* packet = Packet::fromBytes(bytes);
-    std::cout << "RCV[" << getSocketId() << "]: `" << packet->getMessage() << "`" << std::endl;
+    Packet packet = Packet::fromBytes(bytes);
+    std::cout << "RCV[" << getSocketId() << "]: `" << packet.getMessage() << "`" << std::endl;
     return packet;
 }
 

@@ -24,14 +24,14 @@ Packet::Packet()
 
 }
 
-Packet* Packet::fromBytes(char *bytes)
+Packet Packet::fromBytes(char *bytes)
 {
-    char* intBuffer = (char*)malloc(sizeof(uint32_t));
+    char intBuffer[sizeof(uint32_t)];
     memcpy(intBuffer, bytes, sizeof(uint32_t));
 
-    Packet* packet = new Packet();
-    packet->m_requestId = ntohl(*(uint32_t*)intBuffer);
-    packet->m_message = bytes + sizeof(uint32_t);
+    Packet packet;
+    packet.m_requestId = ntohl(*(uint32_t*)intBuffer);
+    packet.m_message = bytes + sizeof(uint32_t);
     return packet;
 }
 
