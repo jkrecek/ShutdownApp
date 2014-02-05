@@ -31,16 +31,16 @@ Packet Packet::fromBytes(char *bytes)
 
     Packet packet;
     packet.m_requestId = ntohl(*(uint32_t*)intBuffer);
-    packet.m_message = bytes + sizeof(uint32_t);
+    packet.m_message = strdup(bytes + sizeof(uint32_t));
+    delete[] bytes;
     return packet;
 }
 
 char* Packet::toBytes()
 {
     uint32_t req_end = htonl(m_requestId);
-    char* bytes = (char*)malloc(getSize());
+    char * bytes = new char[getSize()];
     memcpy(bytes, (char*)&req_end, sizeof(uint32_t));
-
 
     memcpy(bytes + sizeof(uint32_t) , m_message, strlen(m_message));
     bytes[getSize() - 2] = '\n';

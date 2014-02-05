@@ -82,7 +82,7 @@ char* NetworkSocket::readBuffer()
         return NULL;
 
     unsigned len = end - bufferPtr;
-    char* res = (char*)malloc(len + 1);
+    char* res = new char[len + 1];
     memcpy(res, bufferPtr, len);
     res[len] = 0;
     size -= len + 2;
@@ -101,11 +101,13 @@ NVMap NetworkSocket::parsePacket(std::string line)
 void NetworkSocket::send(Packet* packet)
 {
     size_t size;
-    if ((size = ::send(socket, packet->toBytes(), packet->getSize(), 0)) == SOCKET_ERROR)
+    char * bytes = packet->toBytes();
+    if ((size = ::send(socket, bytes, packet->getSize(), 0)) == SOCKET_ERROR)
         std::cout << "W: Could not send data: `" << packet->getMessage() << "`" << std::endl;
     else
         std::cout << "SND[" << getSocketId() << "]: `" << packet->getMessage() << "`" << std::endl;
 
+    delete[] bytes;
     delete packet;
 }
 
@@ -175,7 +177,7 @@ const char* NetworkSocket::getMAC(IpAddress *targetIp)
         }
     }
 
-    char* mac = (char*)malloc(17);
+    char* mac = new char[17];
     sprintf(mac, " %02x:%02x:%02x:%02x:%02x:%02x",
         (unsigned char)ifr.ifr_hwaddr.sa_data[0],
         (unsigned char)ifr.ifr_hwaddr.sa_data[1],

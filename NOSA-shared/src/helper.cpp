@@ -93,14 +93,14 @@ const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NUL
     DWORD dwBufLen = sizeof(adapterInfo);
     char *mac_addr;
 
-    adapterInfo = (IP_ADAPTER_INFO *)malloc(sizeof(IP_ADAPTER_INFO));
+    adapterInfo = new IP_ADAPTER_INFO[sizeof(IP_ADAPTER_INFO)];
     if (adapterInfo == NULL)
         std::cout << "E: Allocating memory needed to call GetAdaptersinfo went wrong." << std::endl;
 
     if (GetAdaptersInfo(adapterInfo, &dwBufLen) == ERROR_BUFFER_OVERFLOW)
     {
-        free(adapterInfo);
-        adapterInfo = (IP_ADAPTER_INFO *)malloc(dwBufLen);
+        delete[] adapterInfo;
+        adapterInfo = new IP_ADAPTER_INFO[dwBufLen];
         if (adapterInfo == NULL)
             std::cout << "E: Allocating memory needed to call GetAdaptersinfo went wrong." << std::endl;
     }
@@ -149,7 +149,7 @@ const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NUL
         if (!candidate)
             return NULL;
 
-        mac_addr = (char*)malloc(MAC_SIZE);
+        mac_addr = new char[AC_SIZE];
         _snprintf_s(mac_addr, _TRUNCATE, MAC_SIZE, "%02X:%02X:%02X:%02X:%02X:%02X",
             candidate->Address[0], candidate->Address[1],
             candidate->Address[2], candidate->Address[3],
@@ -193,7 +193,7 @@ const char* Helper::stripNewLine(const char* ori)
 
 char* Helper::strndup(const char *s, size_t n) {
 #ifdef _WIN32
-    char* res = (char*)malloc(n+1);
+    char* res = new char[n+1];
     strncpy(res, s, n);
     return res;
 #else
