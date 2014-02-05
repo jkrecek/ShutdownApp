@@ -79,7 +79,7 @@ const char* Packet::getCommand()
     if (position != std::string::npos)
         return Helper::strndup(m_message, position);
 
-    return NULL;
+    return m_message;
 }
 
 const char* Packet::getParameters()

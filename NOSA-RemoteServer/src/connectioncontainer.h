@@ -37,6 +37,8 @@ public:
 
     void remove(BaseConnection* connection);
 
+    bool empty();
+
 private:
     ConnectionVector container[TYPE_COUNT];
 };

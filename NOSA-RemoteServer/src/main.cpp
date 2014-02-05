@@ -12,6 +12,7 @@ int main()
         bool success = core.socketCreated();
         if (success)
         {
+            std::cout << "Socket succesfully binded." << std::endl;
             result = core.run();
             core.cleanSockets();
         }

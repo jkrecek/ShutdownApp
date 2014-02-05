@@ -62,3 +62,12 @@ void ConnectionContainer::remove(BaseConnection* connection)
             ++itr;
     }
 }
+
+bool ConnectionContainer::empty()
+{
+    for(int type = TYPE_ANDROID; type != TYPE_COUNT; ++type)
+        if (!container[type].empty())
+            return false;
+
+    return true;
+}

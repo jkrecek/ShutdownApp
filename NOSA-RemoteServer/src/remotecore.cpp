@@ -22,8 +22,9 @@ RemoteCore::RemoteCore(int port)
 
 RemoteCore::~RemoteCore()
 {
-    for(ConnectionContainer::iterator itr = sConnections.begin(); itr.hasMore(); itr.next())
-        delete itr.get();
+    if (!sConnections.empty())
+        for(ConnectionContainer::iterator itr = sConnections.begin(); itr.hasMore(); itr.next())
+            delete itr.get();
 
     delete server;
 }

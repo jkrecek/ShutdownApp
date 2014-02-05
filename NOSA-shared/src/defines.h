@@ -6,7 +6,7 @@
     #define LOOP_LINE
     #define NO_SOCKET if (false)
 #else
-    #define RETRY_DELAY 15
+    #define RETRY_DELAY 5
     #define LOOP_LINE while(true)
     #define ON_NO_SOCKET else
 #endif
