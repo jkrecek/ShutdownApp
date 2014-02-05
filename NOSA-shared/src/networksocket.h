@@ -44,7 +44,7 @@ public:
     const sockaddr_in& getInfo() const  { return info; }
 
     const char* getMAC(IpAddress* targetIp);
-    void send(Packet* packet);
+    void send(Packet packet);
     void sendMsg(const char* message);
     void sendResponse(Packet* originalPacket, const char* response, bool close = true);
 

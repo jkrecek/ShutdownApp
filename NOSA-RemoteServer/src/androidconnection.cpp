@@ -14,7 +14,7 @@ void AndroidConnection::redistributePacket(Packet *packet)
     // rewrite request id handling
 
     if (PCConnection* conn = sConnections.getPCConnection(this))
-        conn->getSocket()->send(packet);
+        conn->getSocket()->send(*packet);
 }
 
 bool AndroidConnection::handlePacket(Packet *packet)

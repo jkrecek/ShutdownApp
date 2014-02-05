@@ -54,13 +54,14 @@ char* NetworkSocket::readLine()
     } else
         bufferPtr = buffer;
 
-    size = recv(socket, bufferPtr, BUFFER_SIZE - 1, 0);
-    if (size <= 0)
-        throw SocketClosedException();
+    char* rest = NULL;
+    do {
+        size = recv(socket, bufferPtr, BUFFER_SIZE - 1, 0);
+        if (size <= 0)
+            throw SocketClosedException();
 
-    char* rest = readBuffer();
-    if (!rest)
-        return NULL;
+        rest = readBuffer();
+    } while(!rest);
 
     if (line == NULL)
         line = rest;
@@ -82,6 +83,9 @@ char* NetworkSocket::readBuffer()
         return NULL;
 
     unsigned len = end - bufferPtr;
+    if (len < 5)
+        return NULL;
+
     char* res = new char[len + 1];
     memcpy(res, bufferPtr, len);
     res[len] = 0;
@@ -98,22 +102,21 @@ NVMap NetworkSocket::parsePacket(std::string line)
     return nvmap;
 }
 
-void NetworkSocket::send(Packet* packet)
+void NetworkSocket::send(Packet packet)
 {
     size_t size;
-    char * bytes = packet->toBytes();
-    if ((size = ::send(socket, bytes, packet->getSize(), 0)) == SOCKET_ERROR)
-        std::cout << "W: Could not send data: `" << packet->getMessage() << "`" << std::endl;
+    char * bytes = packet.toBytes();
+    if ((size = ::send(socket, bytes, packet.getSize(), 0)) == SOCKET_ERROR)
+        std::cout << "SND[" << getSocketId() << "]: E: Could not send data: `" << packet.getMessage() << "`" << std::endl;
     else
-        std::cout << "SND[" << getSocketId() << "]: `" << packet->getMessage() << "`" << std::endl;
+        std::cout << "SND[" << getSocketId() << "]: `" << packet.getMessage() << "`" << std::endl;
 
     delete[] bytes;
-    delete packet;
 }
 
 void NetworkSocket::sendMsg(const char *message)
 {
-    send(new Packet(0, message));
+    send(Packet(0, message));
 }
 
 void NetworkSocket::sendResponse(Packet *originalPacket, const char *response, bool close)

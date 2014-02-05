@@ -41,19 +41,16 @@ PCCore::~PCCore()
 
 int PCCore::run()
 {
-    Packet* packet;
     try
     {
         while(socket->isOpen())
         {
-            packet = socket->readPacket();
-            handler->accepted(packet);
-            delete packet;
+            Packet packet = socket->readPacket();
+            handler->accepted(&packet);
         }
     }
     catch (SocketClosedException& /*e*/) { /* just interrupt */ }
 
-    delete packet;
 
     return 0;
 }

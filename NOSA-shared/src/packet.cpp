@@ -60,11 +60,11 @@ const char* Packet::escape(const char* message)
     return message;
 }
 
-Packet* Packet::responsePacket(const char *message)
+Packet Packet::responsePacket(const char *message)
 {
-    Packet* packet = new Packet();
-    packet->m_requestId = m_requestId;
-    packet->m_message = message;
+    Packet packet;
+    packet.m_requestId = m_requestId;
+    packet.m_message = message;
     return packet;
 }
 

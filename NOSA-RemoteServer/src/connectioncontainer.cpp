@@ -39,6 +39,8 @@ PCConnection* ConnectionContainer::getPCConnection(AndroidConnection* con)
     for (ConnectionVector::iterator itr = container[TYPE_PC].begin(); itr != container[TYPE_PC].end(); ++itr)
         if (con->getUser() == (*itr)->getUser() && con->getPass() == (*itr)->getPass())
             return (PCConnection*)*itr;
+
+    return NULL;
 }
 
 std::vector<AndroidConnection*> ConnectionContainer::getAndroidConnections(PCConnection* con)

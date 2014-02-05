@@ -19,7 +19,7 @@ void PCConnection::redistributePacket(Packet *packet)
 
     for (std::vector<AndroidConnection*>::iterator itr = conns.begin(); itr != conns.end(); ++itr)
     {
-        (*itr)->getSocket()->send(packet);
+        (*itr)->getSocket()->send(*packet);
     }
 }
 
