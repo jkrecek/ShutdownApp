@@ -13,10 +13,18 @@
 
     <string name="edit_text_host_key">edit_text_host</string>
     <string name="title_host">Host address</string>
-    <string name="summary_host">Address to connect with proxy connection</string>
-    <string name="dialog_host">Set host address.</string>
-
     <string name="default_host">54.194.222.199</string>
+    <string name="dialog_host">Set host address</string>
+    <!--<string name="summary_host">Address to connect with proxy connection</string>-->
 
+    <string name="edit_text_utorrent_username">edit_text_utorrent_username</string>
+    <string name="title_utorrent_username">Username</string>
+    <string name="summary_utorrent_username">Set username you want to use while connecting to uTorrent download list</string>
+    <string name="dialog_utorrent_username">Set username</string>
+
+    <string name="edit_text_utorrent_password">edit_text_utorrent_password</string>
+    <string name="title_utorrent_password">Password</string>
+    <string name="summary_utorrent_password">Set password you want to use while connecting to uTorrent download list</string>
+    <string name="dialog_utorrent_password">Set password</string>
 
 </resources>

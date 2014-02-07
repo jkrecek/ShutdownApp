@@ -48,9 +48,9 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
 
     public final static String USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.101 Safari/537.36";
 
-    public static final String KEY_USERNAME = "utorrent_username";
+    /*public static final String KEY_USERNAME = "utorrent_username";
 
-    public static final String KEY_PASSWORD = "utorrent_password";
+    public static final String KEY_PASSWORD = "utorrent_password";*/
 
     private static final String URL_LOGIN = "http://www.serialzone.cz/prihlasovani/";
 
@@ -109,7 +109,12 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
         HttpResponse response = execute(getPost(URL_LOGIN));
 
         if (response.getStatusLine().getStatusCode() != 302) {
-            MainActivity.getPreferences(context).edit().remove(KEY_USERNAME).remove(KEY_PASSWORD).commit();
+            MainActivity.getPreferences(context)
+                .edit()
+                .remove(context.getString(R.string.edit_text_utorrent_username))
+                .remove(context.getString(R.string.edit_text_utorrent_password))
+                .commit();
+
             response.getEntity().consumeContent();
             setCredentialCookies();
             return;
@@ -245,8 +250,8 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
     }
 
     private void getCredentials() {
-        username = MainActivity.getPreferences(context).getString(KEY_USERNAME, null);
-        password = MainActivity.getPreferences(context).getString(KEY_PASSWORD, null);
+        username = MainActivity.getPreferences(context).getString(context.getString(R.string.edit_text_utorrent_username), null);
+        password = MainActivity.getPreferences(context).getString(context.getString(R.string.edit_text_utorrent_password), null);
 
         if (username == null || password == null) {
             new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -295,8 +300,8 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
 
                     MainActivity.getPreferences(context)
                         .edit()
-                        .putString(KEY_USERNAME, username)
-                        .putString(KEY_PASSWORD, password)
+                        .putString(context.getString(R.string.edit_text_utorrent_username), username)
+                        .putString(context.getString(R.string.edit_text_utorrent_password), password)
                         .commit();
                 }
             }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {

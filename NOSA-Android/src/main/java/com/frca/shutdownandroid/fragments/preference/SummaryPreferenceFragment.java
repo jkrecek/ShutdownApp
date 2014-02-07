@@ -6,6 +6,8 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.text.InputType;
+import android.util.Log;
 
 public class SummaryPreferenceFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
     @Override
@@ -45,13 +47,22 @@ public class SummaryPreferenceFragment extends PreferenceFragment implements Sha
         Preference pref = findPreference(key);
 
         if (pref instanceof ListPreference) {
-            ListPreference listPref = (ListPreference) pref;
-            pref.setSummary(listPref.getEntry());
+            ListPreference listPreference = (ListPreference) pref;
+            pref.setSummary(listPreference.getEntry());
         }
 
         if (pref instanceof EditTextPreference) {
-            EditTextPreference listPref = (EditTextPreference) pref;
-            pref.setSummary(listPref.getText());
+            EditTextPreference editTextPreference = (EditTextPreference) pref;
+            int variation = editTextPreference.getEditText().getInputType() & InputType.TYPE_MASK_VARIATION;
+            boolean isPassword = ((variation  == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
+                                ||(variation  == InputType.TYPE_TEXT_VARIATION_PASSWORD)
+                                ||(variation  == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD));
+
+            String text = editTextPreference.getText();
+            if (isPassword)
+                text = text.replaceAll(".", "*");
+
+            editTextPreference.setSummary(text);
         }
     }
 }

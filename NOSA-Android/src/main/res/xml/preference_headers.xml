@@ -7,7 +7,7 @@
             android:title="Base settings"
             android:summary="Settings of application" />
 
-    <header android:fragment="com.frca.shutdownandroid.SettingsActivity$ManageConnectionsFragment"
+    <header android:fragment="com.frca.shutdownandroid.fragments.preference.ManageConnectionsSettingsFragment"
             android:icon="@drawable/ic_action_settings_connections"
             android:title="Manage Connections"
             android:summary="Managing of existing connections" />
