@@ -87,7 +87,7 @@ std::list<EpisodeTorrent> PacketHandler::getTorrentMagnets(Packet* packet)
 
     socket->sendResponse(packet, "Start downloading page", false);
 
-    std::string url_start = "http://thepiratebay.pe/user/eztv/";
+    std::string url_start = "http://thepiratebay.org/user/eztv/";
     for (int i = 0; i < 5; ++i)
     {
         std::string url = url_start + Helper::to_string(i) + "/3";
