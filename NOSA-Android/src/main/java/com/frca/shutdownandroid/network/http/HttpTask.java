@@ -48,9 +48,9 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
 
     public final static String USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.101 Safari/537.36";
 
-    public static final String KEY_USERNAME = "username";
+    public static final String KEY_USERNAME = "utorrent_username";
 
-    public static final String KEY_PASSWORD = "password";
+    public static final String KEY_PASSWORD = "utorrent_password";
 
     private static final String URL_LOGIN = "http://www.serialzone.cz/prihlasovani/";
 
@@ -65,8 +65,6 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
     private List<String> cookies = new ArrayList<String>();
 
     private OnHandled callback;
-
-    private HttpRequestBase currentRequest;
 
     private AndroidHttpClient httpClient = AndroidHttpClient.newInstance(USER_AGENT);
 
@@ -99,11 +97,6 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
     }
 
     private HttpResponse execute(HttpRequestBase requestBase) throws IOException {
-        if (currentRequest != null) {
-            currentRequest.abort();
-            httpClient.close();
-        }
-
         dumpRequest(requestBase);
         HttpResponse response = httpClient.execute(requestBase);
         dumpResponse(response);

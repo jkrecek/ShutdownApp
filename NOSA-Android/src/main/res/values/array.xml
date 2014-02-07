@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="entries_list_preference">
+        <item>bla99</item>
+        <item>bla98</item>
+        <item>bla97</item>
+    </string-array>
+
+    <string-array name="entryvalues_list_preference">
+        <item>bla199</item>
+        <item>bla198</item>
+        <item>bla197</item>
+    </string-array>
+</resources>

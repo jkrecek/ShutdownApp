@@ -11,4 +11,12 @@
     <string name="add_direct">Direct connection</string>
     <string name="add_proxy">Proxy connection</string>
 
+    <string name="edit_text_host_key">edit_text_host</string>
+    <string name="title_host">Host address</string>
+    <string name="summary_host">Address to connect with proxy connection</string>
+    <string name="dialog_host">Set host address.</string>
+
+    <string name="default_host">54.194.222.199</string>
+
+
 </resources>

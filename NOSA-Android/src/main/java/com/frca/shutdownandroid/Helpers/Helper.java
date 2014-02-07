@@ -2,7 +2,6 @@ package com.frca.shutdownandroid.Helpers;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -11,6 +10,7 @@ import com.frca.shutdownandroid.MainActivity;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -134,6 +134,6 @@ public abstract class Helper {
             e.printStackTrace();
         }
         byte [] digest = mda.digest(flatPassword.getBytes());
-        return new String(digest);
+        return String.format("%0128x", new BigInteger(1, digest));
     }
 }

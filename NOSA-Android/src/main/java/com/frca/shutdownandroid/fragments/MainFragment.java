@@ -14,8 +14,6 @@ import android.widget.TextView;
 import com.frca.shutdownandroid.R;
 import com.frca.shutdownandroid.classes.Connection;
 import com.frca.shutdownandroid.classes.ControlAction;
-import com.frca.shutdownandroid.classes.DirectConnection;
-import com.frca.shutdownandroid.classes.ProxyConnection;
 
 /**
  * Created by KillerFrca on 1.12.13.

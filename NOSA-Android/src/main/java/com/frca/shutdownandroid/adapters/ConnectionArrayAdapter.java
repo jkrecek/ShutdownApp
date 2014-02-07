@@ -4,10 +4,6 @@ import android.content.Context;
 import android.text.TextUtils;
 
 import com.frca.shutdownandroid.classes.Connection;
-import com.frca.shutdownandroid.classes.DirectConnection;
-import com.frca.shutdownandroid.classes.ProxyConnection;
-
-import org.w3c.dom.Text;
 
 /**
  * Created by KillerFrca on 1.12.13.

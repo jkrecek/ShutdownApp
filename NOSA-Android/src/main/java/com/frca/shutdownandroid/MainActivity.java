@@ -7,23 +7,20 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.frca.shutdownandroid.Helpers.Helper;
 import com.frca.shutdownandroid.adapters.ConnectionArrayAdapter;
@@ -32,9 +29,6 @@ import com.frca.shutdownandroid.classes.ConnectionList;
 import com.frca.shutdownandroid.classes.ProxyConnection;
 import com.frca.shutdownandroid.fragments.MainFragment;
 import com.frca.shutdownandroid.network.NetworkThread;
-import com.google.gson.Gson;
-
-import java.net.InetSocketAddress;
 
 public class MainActivity extends Activity implements ActionBar.OnNavigationListener {
     private static final String NAVIGATION_IDX = "navi_idx";
@@ -92,19 +86,6 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
 
         connections = ConnectionList.loadFromPrefs(getPreferences(this));
 
-        /*Gson gson = new Gson();
-        new AlertDialog.Builder(this).setTitle("json")
-                .setMessage(gson.toJson(connections.toArray()))
-                .setPositiveButton("ok", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.dismiss();
-                    }
-                })
-                .create()
-                .show();*/
-
-
         if (connections.isEmpty())
             getActionBar().setTitle("Add connection");
         else {
@@ -153,13 +134,12 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_add: {
-                /* TODO add window create*/
                 showRequestCredentialsDialog();
-                /*EditText editText = getActionBarEditText();
-                if (editText == null)
-                    displayEditText();
-                else
-                    onEditTextConfirm(editText);*/
+                return true;
+            }
+
+            case R.id.action_settings: {
+                startActivity(new Intent(this, SettingsActivity.class));
                 return true;
             }
         }
@@ -440,7 +420,8 @@ public class MainActivity extends Activity implements ActionBar.OnNavigationList
     }
 
     public static SharedPreferences getPreferences(Context context) {
-        return context.getSharedPreferences(MainActivity.class.getSimpleName(), Context.MODE_PRIVATE);
+        return PreferenceManager.getDefaultSharedPreferences(context);
+        //return context.getSharedPreferences(MainActivity.class.getSimpleName(), Context.MODE_PRIVATE);
     }
 
     public Connection getConnection(int generatedId) {

@@ -1,7 +1,6 @@
 package com.frca.shutdownandroid.network;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.frca.shutdownandroid.Helpers.Helper;
 

@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.frca.shutdownandroid.Helpers.Helper;
 import com.frca.shutdownandroid.MainActivity;
+import com.frca.shutdownandroid.R;
 import com.frca.shutdownandroid.classes.Connection;
 import com.frca.shutdownandroid.classes.DirectConnection;
 
@@ -29,13 +30,17 @@ public class NetworkThread /*extends Thread implements Runnable */ {
     public static final int CONNECT_TIMEOUT = 2000;
     public static final int STREAM_TIMEOUT = 15000;
 
+    public static final String LOCALHOST = "localhost";
+    public static final Pattern HOST_ADDRESS = Pattern.compile("^(?:([\\w\\-])*\\.)?([\\w\\-]+)\\.([a-zA-Z]{2,4})$");
     public static final Pattern MAC_ADDRESS = Pattern.compile("^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$");
+    public static final Pattern IP_ADDRESS = Pattern.compile("^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+            "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
 
     private Connection connection;
     private Context context;
     private static int currentPacketId = 0;
 
-    private Map<String, NetworkTask> activeTask = Collections.synchronizedMap(new HashMap<String, NetworkTask>());
+    private Map<Integer, NetworkTask> activeTask = Collections.synchronizedMap(new HashMap<Integer, NetworkTask>());
 
     public NetworkThread(Context context) {
         this.context = context;
@@ -51,7 +56,7 @@ public class NetworkThread /*extends Thread implements Runnable */ {
 
     public void sendMessage(String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
         Command command = new Command(createPacket(message), messageReceived, exceptionReceived);
-        run(getConnectIp(connection), command);
+        run(getConnectIp(connection), connection, command);
     }
 
     public void sendMessage(Connection connection, String message) {
@@ -64,20 +69,20 @@ public class NetworkThread /*extends Thread implements Runnable */ {
 
     public void sendMessage(Connection connection, String message, OnMessageReceived messageReceived, OnExceptionReceived exceptionReceived) {
         Command command = new Command(createPacket(message), messageReceived, exceptionReceived);
-        run(getConnectIp(connection), command);
+        run(getConnectIp(connection), connection, command);
     }
 
-    public NetworkTask run(String ipAddress, Command command) {
+    public NetworkTask run(String ipAddress, Connection connection, Command command) {
         NetworkTask task;
-        if (activeTask.containsKey(ipAddress))
-            task = activeTask.get(ipAddress);
+        if (activeTask.containsKey(connection.getGeneratedId()))
+            task = activeTask.get(connection.getGeneratedId());
         else {
-            task = new NetworkTask(ipAddress, onTaskEndInstance);
-            activeTask.put(ipAddress, task);
+            task = new NetworkTask(ipAddress, connection, onTaskEndInstance);
+            activeTask.put(connection.getGeneratedId(), task);
         }
 
         task.addCommand(command);
-        if (!task.isAlive())
+        if (!task.isAlive() && !task.isInterrupted())
             task.start();
 
         return task;
@@ -116,7 +121,10 @@ public class NetworkThread /*extends Thread implements Runnable */ {
     private NetworkTask.OnNetworkTaskEnd onTaskEndInstance = new NetworkTask.OnNetworkTaskEnd() {
         @Override
         public void onEnd(NetworkTask task) {
-            activeTask.remove(task.getIpAddress());
+            Log.e("blabla", "test");
+            Log.e("size", Integer.toString(activeTask.size()));
+            activeTask.remove(task.getConnection().getGeneratedId());
+            Log.e("size", Integer.toString(activeTask.size()));
         }
     };
 
@@ -128,12 +136,6 @@ public class NetworkThread /*extends Thread implements Runnable */ {
         sendMessage(connection, "STATUS", new OnMessageReceived() {
             @Override
             public void messageReceived(String response) {
-                // TODO
-                /*boolean success = true;
-
-                if (!NetworkThread.MAC_ADDRESS.matcher(responseMAC).matches())
-                    success = false;*/
-
                 resultCallback.result(response.equals("ONLINE"));
             }
         }, new OnExceptionReceived() {
@@ -148,7 +150,10 @@ public class NetworkThread /*extends Thread implements Runnable */ {
         if (connection.getType() == Connection.ConnectionType.DIRECT)
             return ((DirectConnection)connection).getIp();
         else {
-            return MainActivity.getPreferences(context).getString(KEY_PROXY_HOST, "54.194.222.199");
+            return MainActivity.getPreferences(context).getString(
+                context.getString(R.string.edit_text_host_key),
+                context.getString(R.string.default_host)
+            );
         }
     }
 
@@ -167,9 +172,6 @@ public class NetworkThread /*extends Thread implements Runnable */ {
     public interface OnExceptionReceived {
         public void exceptionReceived(Exception e);
     }
-
-    public static OnMessageReceived doNothingOnMessage = new OnMessageReceived() { @Override public void messageReceived(String message) { } };
-    public static OnExceptionReceived doNothingOnException = new OnExceptionReceived() { @Override public void exceptionReceived(Exception e) { } };
 
     private OnMessageReceived defaultMessageReceiver = new OnMessageReceived() {
         @Override

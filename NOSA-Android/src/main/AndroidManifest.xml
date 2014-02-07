@@ -6,9 +6,12 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!--
+    Uses gradle values
     <uses-sdk
         android:minSdkVersion="18"
-        android:targetSdkVersion="19" />
+        android:targetSdkVersion="18" />
+    -->
 
     <application
         android:allowBackup="true"
@@ -24,6 +27,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="com.frca.shutdownandroid.SettingsActivity"
+            android:icon="@android:drawable/ic_menu_manage"
+            android:label="@string/action_settings" />
     </application>
 
 </manifest>

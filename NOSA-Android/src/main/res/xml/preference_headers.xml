@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<preference-headers
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <header android:fragment="com.frca.shutdownandroid.fragments.preference.BaseSettingsFragment"
+            android:icon="@drawable/ic_action_settings_base"
+            android:title="Base settings"
+            android:summary="Settings of application" />
+
+    <header android:fragment="com.frca.shutdownandroid.SettingsActivity$ManageConnectionsFragment"
+            android:icon="@drawable/ic_action_settings_connections"
+            android:title="Manage Connections"
+            android:summary="Managing of existing connections" />
+
+</preference-headers>

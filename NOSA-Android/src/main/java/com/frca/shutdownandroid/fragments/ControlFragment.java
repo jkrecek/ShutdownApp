@@ -254,21 +254,19 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
                                 public void run() {
                                     valueField.setText(String.valueOf(i/10.f) + "%");
                                     float outValue = seekBar.getProgress()/1000.f;
-                                    thread.sendMessage("SET_VOLUME " + String.valueOf(outValue), NetworkThread.doNothingOnMessage);
+                                    thread.sendMessage("SET_VOLUME " + String.valueOf(outValue), null);
                                 }
                             });
                         }
 
                         @Override
-                        public void onStartTrackingTouch(SeekBar seekBar) {
-
-                        }
+                        public void onStartTrackingTouch(SeekBar seekBar) { }
 
                         @Override
                         public void onStopTrackingTouch(SeekBar seekBar) {
                             valueField.setText(String.valueOf(seekBar.getProgress()/10.f) + "%");
                             float outValue = seekBar.getProgress()/1000.f;
-                            thread.sendMessage("SET_VOLUME " + String.valueOf(outValue), NetworkThread.doNothingOnMessage);
+                            thread.sendMessage("SET_VOLUME " + String.valueOf(outValue), null);
                         }
                     });
                     bar.setProgress((int) (value * 1000));

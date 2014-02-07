@@ -1,10 +1,7 @@
 package com.frca.shutdownandroid.classes;
 
 import android.content.SharedPreferences;
-import android.util.Log;
 import android.util.SparseArray;
-
-import java.lang.reflect.Type;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -13,6 +10,8 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+import java.lang.reflect.Type;
 
 public class ConnectionList<T extends Connection> extends SparseArray<T> {
 

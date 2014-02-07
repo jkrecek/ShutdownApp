@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="Proxy connection details">
+
+        <EditTextPreference
+            android:key="@string/edit_text_host_key"
+            android:title="@string/title_host"
+            android:defaultValue="@string/default_host"
+            android:summary="@string/summary_host"
+            android:dialogTitle="@string/dialog_host" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="bla4">
+
+        <EditTextPreference
+            android:key=""
+            android:title="bla5"
+            android:summary="bla6"
+            android:dialogTitle="bla7" />
+
+        <ListPreference
+            android:key="list_preference"
+            android:title="bla8"
+            android:summary="bla9"
+            android:entries="@array/entries_list_preference"
+            android:entryValues="@array/entryvalues_list_preference"
+            android:dialogTitle="bla10" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="bla15">
+
+        <CheckBoxPreference
+            android:key="parent_checkbox_preference"
+            android:title="bla16"
+            android:summary="bla17" />
+
+        <!-- The visual style of a child is defined by this styled theme attribute. -->
+        <CheckBoxPreference
+            android:key="child_checkbox_preference"
+            android:dependency="parent_checkbox_preference"
+            android:layout="?android:attr/preferenceLayoutChild"
+            android:title="bla18"
+            android:summary="bla19" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

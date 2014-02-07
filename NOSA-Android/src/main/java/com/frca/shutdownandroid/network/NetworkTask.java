@@ -1,29 +1,31 @@
 package com.frca.shutdownandroid.network;
 
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
 
 import com.frca.shutdownandroid.Helpers.Helper;
+import com.frca.shutdownandroid.classes.Connection;
+import com.frca.shutdownandroid.classes.ProxyConnection;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by KillerFrca on 1.12.13.
  */
 public class NetworkTask extends Thread implements Runnable {
 
+    private static final int DISCONNECT_INTERVAL = 15000;
+
     private String ipAddress;
+
+    private Connection connection;
 
     private Socket socket;
 
@@ -33,9 +35,13 @@ public class NetworkTask extends Thread implements Runnable {
 
     private OnNetworkTaskEnd onEnd;
 
-    public NetworkTask(String ipAddress, OnNetworkTaskEnd onEnd) {
+    private long lastCommandHandled;
+
+    public NetworkTask(String ipAddress, Connection connection, OnNetworkTaskEnd onEnd) {
         this.ipAddress = ipAddress;
+        this.connection = connection;
         this.onEnd = onEnd;
+        this.lastCommandHandled = System.currentTimeMillis();
     }
 
     @Override
@@ -43,7 +49,7 @@ public class NetworkTask extends Thread implements Runnable {
         try {
             socket = NetworkThread.createSocket(ipAddress);
 
-            sendPacket(NetworkThread.createPacket("type=ANDROID user=frca pass=superdupr"));
+            login();
 
             Packet rcvPacket = null;
             while (socket.isConnected()) {
@@ -68,6 +74,13 @@ public class NetworkTask extends Thread implements Runnable {
                 }
 
                 Helper.simpleSleep(100);
+
+                if (waitingCommands.size() == 0) {
+                    if ((lastCommandHandled + DISCONNECT_INTERVAL) < System.currentTimeMillis())
+                        break;
+                } else {
+                    lastCommandHandled = System.currentTimeMillis();
+                }
             }
         } catch (final IOException e) {
             respondExceptions(e);
@@ -76,6 +89,14 @@ public class NetworkTask extends Thread implements Runnable {
             try {
                 NetworkThread.closeSocket(socket);
             } catch (IOException e) { /* no problem if already closed */ }
+        }
+    }
+
+    private void login() throws IOException {
+        if (connection instanceof ProxyConnection) {
+            ProxyConnection proxy = (ProxyConnection)connection;
+            String msg = "type=ANDROID user=" + proxy.getUsername() + " pass=" + proxy.getPasswordHash();
+            sendPacket(NetworkThread.createPacket(msg));
         }
     }
 
@@ -91,9 +112,7 @@ public class NetworkTask extends Thread implements Runnable {
             .put(strBytes)
             .put((byte) 10)
             .array();
-        /*output.writeInt(packet.getId());
-        output.writeBytes(packet.getContent());
-        output.write('\n');*/
+
         output.write(bytes);
         output.flush();
     }
@@ -105,23 +124,31 @@ public class NetworkTask extends Thread implements Runnable {
             return;
         }
 
-        Log.i("Network", "RCV[" + packet.getId() + "]: " + packet.getContent());
-        Helper.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (command.getMessageReceived() != null)
-                    command.getMessageReceived().messageReceived(packet.getContent());
-            }
-        });
+        if (packet.getContent().trim().equals("CLOSE")) {
+            Log.i("Network", "CLS[" + packet.getId() + "]: Requested close");
+        } else {
+            Log.i("Network", "RCV[" + packet.getId() + "]: " + packet.getContent());
+            Helper.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (command.getMessageReceived() != null)
+                        command.getMessageReceived().messageReceived(packet.getContent().trim());
+                }
+            });
+        }
     }
 
     public void respondExceptions(final IOException e) {
         Helper.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Command command;
-                for (int idx = 0; idx < waitingCommands.size(); ++ idx) {
-                    command = waitingCommands.valueAt(idx);
+                for (int idx = 0; idx < waitingCommands.size(); ++idx) {
+                    Command command = waitingCommands.valueAt(idx);
+                    if (command.getExceptionReceived() != null)
+                        command.getExceptionReceived().exceptionReceived(e);
+                }
+
+                for (Command command : sendBuffer) {
                     if (command.getExceptionReceived() != null)
                         command.getExceptionReceived().exceptionReceived(e);
                 }
@@ -133,6 +160,10 @@ public class NetworkTask extends Thread implements Runnable {
         synchronized (sendBuffer) {
             sendBuffer.add(command);
         }
+    }
+
+    public Connection getConnection() {
+        return connection;
     }
 
     public String getIpAddress() {
