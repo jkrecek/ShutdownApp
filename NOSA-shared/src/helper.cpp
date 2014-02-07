@@ -246,7 +246,7 @@ size_t Helper::position_of_char(const char *text, char ch) {
 bool Helper::request_privileges(LPCSTR value)
 {
     LPCSTR privileges[] = { value };
-    return request_privileges(value);
+    return request_privileges(privileges);
 }
 
 bool Helper::request_privileges(LPCSTR values[])
