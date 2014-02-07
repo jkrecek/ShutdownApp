@@ -149,7 +149,7 @@ const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NUL
         if (!candidate)
             return NULL;
 
-        mac_addr = new char[AC_SIZE];
+        mac_addr = new char[MAC_SIZE];
         _snprintf_s(mac_addr, _TRUNCATE, MAC_SIZE, "%02X:%02X:%02X:%02X:%02X:%02X",
             candidate->Address[0], candidate->Address[1],
             candidate->Address[2], candidate->Address[3],
@@ -195,6 +195,7 @@ char* Helper::strndup(const char *s, size_t n) {
 #ifdef _WIN32
     char* res = new char[n+1];
     strncpy(res, s, n);
+    res[n] = '\0';
     return res;
 #else
     return ::strndup(s, n);
@@ -239,5 +240,5 @@ size_t Helper::position_of_char(const char *text, char ch) {
     if (!(end = (char*)memchr(text, ch, strlen(text))))
         return std::string::npos;
 
-    return text - end;
+    return end - text;
 }
