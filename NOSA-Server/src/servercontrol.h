@@ -33,9 +33,6 @@ class ServerControl
 public:
     ServerControl();
 
-    const char* execute(Command command);
-    Command getCommand(std::string string);
-
     float getVolumeLevel();
     void setVolumeLevel(float volumeLevel);
 

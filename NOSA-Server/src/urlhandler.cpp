@@ -40,7 +40,6 @@ std::string URLHandler::loadUrl(const char* url)
 
         curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &httpCode);
 
-
         if (res != CURLE_OK)
             std::cout <<  "E: curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
 

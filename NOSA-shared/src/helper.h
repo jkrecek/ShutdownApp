@@ -29,6 +29,8 @@ public:
     static bool file_exists(const std::string& name);
     static std::string fromDecimal(ullint n, ullint b);
     static char* strndup(const char* s, size_t n);
+    static bool request_privileges(LPCSTR value);
+    static bool request_privileges(LPCSTR values[]);
 
 #ifdef _WIN32
     static std::string GetSZValueUnique( HKEY openKey, const char* regkey, const char* keyName );

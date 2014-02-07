@@ -236,9 +236,37 @@ std::string Helper::fromDecimal(ullint n, ullint b)
 }
 
 size_t Helper::position_of_char(const char *text, char ch) {
-    char* end;
-    if (!(end = (char*)memchr(text, ch, strlen(text))))
+    char* end = (char*)memchr(text, ch, strlen(text));
+    if (!end)
         return std::string::npos;
 
     return end - text;
+}
+
+bool Helper::request_privileges(LPCSTR value)
+{
+    LPCSTR privileges[] = { value };
+    return request_privileges(value);
+}
+
+bool Helper::request_privileges(LPCSTR values[])
+{
+    HANDLE hToken = NULL;
+
+    size_t count = sizeof(LPCSTR)/sizeof(values);
+
+    OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY, &hToken);
+    int offset = FIELD_OFFSET(TOKEN_PRIVILEGES, Privileges[count]);
+    PTOKEN_PRIVILEGES tkp = (PTOKEN_PRIVILEGES) malloc(offset);
+
+    tkp->PrivilegeCount = count;
+    for(size_t i = 0; i < count; ++i) {
+        LookupPrivilegeValue(NULL, values[i], &tkp->Privileges[i].Luid);
+        tkp->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED;
+    }
+
+    AdjustTokenPrivileges(hToken, FALSE, tkp, 0, NULL, 0);
+    CloseHandle(hToken);
+
+    return true;
 }

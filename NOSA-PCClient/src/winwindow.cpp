@@ -228,6 +228,8 @@ void WinWindow::doRunOnStart()
 {
     std::string runPath = getExecutablePath(true);
 
+    Helper::request_privileges(SE_TAKE_OWNERSHIP_NAME);
+
     HKEY hKey;
     LONG result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_WRITE, &hKey);
     if (result == ERROR_SUCCESS)

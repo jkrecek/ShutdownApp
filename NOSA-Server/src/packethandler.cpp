@@ -19,22 +19,44 @@ PacketHandler::PacketHandler(MainSocket *_socket)
 
 void PacketHandler::accepted(Packet *packet)
 {
-    /*std::string line = packet->getMessage();
-    std::size_t firstSpace = line.find(" ");
-    std::string command , arguments;
-    if (firstSpace == std::string::npos)
-        command = line;
-    else
-    {
-        command = line.substr(0, firstSpace);
-        arguments = line.substr(firstSpace);
-    }*/
+    if (packet->isCommand("TURN_OFF")) {
+        Helper::request_privileges(SE_SHUTDOWN_NAME);
+        ExitWindowsEx(EWX_POWEROFF, SHTDN_REASON_MAJOR_APPLICATION);
+        socket->sendResponse(packet, "OK");
+        return;
+    }
 
-    Command controlCommand = sPCControl.getCommand(packet->getCommand());
-    if (controlCommand != NONE)
-    {
-        const char* result = sPCControl.execute(controlCommand);
-        socket->sendResponse(packet, result);
+    if (packet->isCommand("RESTART")) {
+        Helper::request_privileges(SE_SHUTDOWN_NAME);
+        ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_APPLICATION);
+        socket->sendResponse(packet, "OK");
+        return;
+    }
+
+    if (packet->isCommand("LOGOFF")) {
+        Helper::request_privileges(SE_SHUTDOWN_NAME);
+        ExitWindowsEx(EWX_LOGOFF, SHTDN_REASON_MAJOR_APPLICATION);
+        socket->sendResponse(packet, "OK");
+        return;
+    }
+
+    if (packet->isCommand("LOCK")) {
+        LockWorkStation();
+        socket->sendResponse(packet, "OK");
+        return;
+    }
+
+    if (packet->isCommand("SLEEP")) {
+        Helper::request_privileges(SE_SHUTDOWN_NAME);
+        SetSystemPowerState(false, false);
+        socket->sendResponse(packet, "OK");
+        return;
+    }
+
+    if (packet->isCommand("HIBERNATE")) {
+        Helper::request_privileges(SE_SHUTDOWN_NAME);
+        SetSystemPowerState(true, false);
+        socket->sendResponse(packet, "OK");
         return;
     }
 

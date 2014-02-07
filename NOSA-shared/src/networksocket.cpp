@@ -78,8 +78,8 @@ char* NetworkSocket::readLine()
 
 char* NetworkSocket::readBuffer()
 {
-    char* end;
-    if (!(end = (char*)memchr(bufferPtr, '\n', size)))
+    char* end = (char*)memchr(bufferPtr, '\n', size);
+    if (!end)
         return NULL;
 
     unsigned len = end - bufferPtr;
