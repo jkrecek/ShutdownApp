@@ -23,7 +23,7 @@ public:
     int getInt(std::string key, int defaultValue = 0);
     float getFloat(std::string key, float defaultValue = 0.f);
 
-    std::string toString();
+    std::string toString(char separator);
 };
 
 #endif // NVMAP_H

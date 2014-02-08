@@ -94,11 +94,11 @@ float NVMap::getFloat(std::string key, float defaultValue)
     return defaultValue;
 }
 
-std::string NVMap::toString()
+std::string NVMap::toString(char separator)
 {
     std::ostringstream ss;
     for (NVMap::iterator itr = begin(); itr != end(); ++itr)
-        ss << itr->first << "=" << itr->second << "\n";
+        ss << itr->first << "=" << itr->second << separator;
 
     return ss.str();
 }
