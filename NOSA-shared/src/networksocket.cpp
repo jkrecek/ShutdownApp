@@ -48,11 +48,10 @@ char* NetworkSocket::readLine()
     char* line = NULL;
     if (size > 0)
     {
-        line = readBuffer();
-
-        if (line && line[strlen(line)-1] == '\n')
+        if (line = readBuffer())
             return line;
-    } else
+    }
+    else
         bufferPtr = buffer;
 
     if (size < 0)
