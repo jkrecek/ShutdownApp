@@ -96,7 +96,7 @@ char* NetworkSocket::readBuffer()
     char* res = new char[len + 1];
     memcpy(res, bufferPtr, len);
     res[len] = 0;
-    size -= len + 2;
+    size -= len + 1;
     bufferPtr = end + 1;
     return res;
 }

@@ -43,15 +43,14 @@ char* Packet::toBytes()
     memcpy(bytes, (char*)&req_end, sizeof(uint32_t));
 
     memcpy(bytes + sizeof(uint32_t) , m_message, strlen(m_message));
-    bytes[getSize() - 2] = '\n';
-    bytes[getSize() - 1] = 0;
+    bytes[getSize() - 1] = '\n';
 
     return bytes;
 }
 
 unsigned Packet::getSize() const
 {
-    return sizeof(uint32_t) + strlen(m_message) + 2;
+    return sizeof(uint32_t) + strlen(m_message) + 1;
 }
 
 const char* Packet::escape(const char* message)
