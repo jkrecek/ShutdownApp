@@ -49,19 +49,26 @@ char* NetworkSocket::readLine()
     if (size > 0)
     {
         line = readBuffer();
-        if (size || line[strlen(line)-1] == '\n')
+
+        if (line && line[strlen(line)-1] == '\n')
             return line;
     } else
         bufferPtr = buffer;
 
-    char* rest = NULL;
+    if (size < 0)
+        size = 0;
+
+    char * rest = NULL;
     do {
-        size = recv(socket, bufferPtr, BUFFER_SIZE - 1, 0);
-        if (size <= 0)
+        int newSize = recv(socket, bufferPtr + size, BUFFER_SIZE - 1, 0);
+        if (newSize <= 0)
             throw SocketClosedException();
+
+        size += newSize;
 
         rest = readBuffer();
     } while(!rest);
+
 
     if (line == NULL)
         line = rest;
