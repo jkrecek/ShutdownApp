@@ -4,15 +4,16 @@
 #include <stdlib.h>
 
 Configuration::Configuration()
-    : m_fileName(NULL), m_fileExists(false)
+    : m_fileName(), m_fileExists(false)
 {
 }
 
 Configuration* Configuration::loadFile(const char *file)
 {
     Configuration* conf = new Configuration();
-    conf->m_fileName = file;
-    std::ifstream infile(file);
+    conf->m_fileName = Helper::getPathToFile(file, true);
+    std::ifstream infile(conf->m_fileName.c_str());
+
     if (infile.good())
     {
         conf->m_fileExists = true;
@@ -36,17 +37,20 @@ Configuration* Configuration::loadFile(const char *file)
 }
 
 
-void Configuration::saveToFile(const char *file)
+bool Configuration::saveToFile(const char *file)
 {
     std::ofstream outfile(file, std::ofstream::out);
-    if (outfile.good())
-        for (NVMap::iterator itr = values.begin(); itr != values.end(); ++itr)
-            outfile << itr->first << "=" << itr->second << "\n";
+    if (outfile.good()) {
+        outfile << values.toString();
+        return true;
+    }
+    else
+        return false;
 }
 
-void Configuration::save()
+bool Configuration::save()
 {
-    saveToFile(m_fileName);
+    return saveToFile(m_fileName.c_str());
 }
 
 std::string Configuration::getString(std::string key, std::string defaultValue)

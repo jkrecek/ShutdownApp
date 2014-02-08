@@ -11,8 +11,8 @@ class Configuration
 {
 public:
     static Configuration* loadFile(const char* file);
-    void saveToFile(const char* file);
-    void save();
+    bool saveToFile(const char* file);
+    bool save();
 
     bool fileExists() const { return m_fileExists; }
 
@@ -30,7 +30,7 @@ private:
     Configuration();
 
     NVMap values;
-    const char* m_fileName;
+    std::string m_fileName;
     bool m_fileExists;
 };
 

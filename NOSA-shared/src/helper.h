@@ -31,6 +31,7 @@ public:
     static char* strndup(const char* s, size_t n);
     static bool request_privileges(LPCSTR value);
     static bool request_privileges(LPCSTR values[]);
+    static std::string getPathToFile(const char* fileName, bool extraBackslash = false);
 
 #ifdef _WIN32
     static std::string GetSZValueUnique( HKEY openKey, const char* regkey, const char* keyName );

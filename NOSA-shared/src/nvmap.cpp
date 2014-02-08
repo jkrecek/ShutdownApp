@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <stdio.h>
+#include <sstream>
 
 #define STR_INVALID "_INVALID_"
 
@@ -93,3 +94,11 @@ float NVMap::getFloat(std::string key, float defaultValue)
     return defaultValue;
 }
 
+std::string NVMap::toString()
+{
+    std::ostringstream ss;
+    for (NVMap::iterator itr = begin(); itr != end(); ++itr)
+        ss << itr->first << "=" << itr->second << "\n";
+
+    return ss.str();
+}

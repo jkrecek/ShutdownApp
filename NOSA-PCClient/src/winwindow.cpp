@@ -6,12 +6,7 @@
 #include "sha512.h"
 
 #ifdef __WIN32
-    #include <direct.h>
-    #define GetCurrentDir _getcwd
     #include "../res/resources.h"
-#else
-    #include <unistd.h>
-    #define GetCurrentDir getcwd
  #endif
 
 const static char* appName = "NOSA-PCClient";
@@ -109,17 +104,6 @@ LRESULT WinWindow::Proc(UINT msg, WPARAM wParam, LPARAM lParam)
 
 void WinWindow::onCreate()
 {
-/*
-    addText(LABEL_ADDRESS, "Address:", 10, 15, 60);
-    addEdit(EDIT_ADDRESS, "", 70, 10, 150);
-
-    addText(LABEL_USERNAME, "Username:", 10, 41, 60);
-    addEdit(EDIT_USERNAME, "", 70, 36, 150);
-
-    addText(LABEL_PASSWORD, "Password:", 10, 67, 60);
-    addEdit(EDIT_PASSWORD, "", 70, 62, 150, 24, ES_PASSWORD);
-*/
-
     addText(LABEL_ADDRESS, "Address:", 10, 45, 60);
     addEdit(EDIT_ADDRESS, "", 70, 40, 150);
 
@@ -138,7 +122,7 @@ void WinWindow::onCreate()
 
     SendMessage(m_objects[EDIT_ADDRESS], WM_SETTEXT, 0, (LPARAM)m_config->getString("REMOTE_ADDRESS", "").c_str());
     SendMessage(m_objects[EDIT_USERNAME], WM_SETTEXT, 0, (LPARAM)m_config->getString("USER", "").c_str());
-    SendMessage(m_objects[EDIT_PASSWORD], WM_SETTEXT, 0, (LPARAM)m_config->getString("PASS", "").c_str());
+    //SendMessage(m_objects[EDIT_PASSWORD], WM_SETTEXT, 0, (LPARAM)m_config->getString("PASS", "").c_str());
 }
 
 bool WinWindow::onCommand(WPARAM handle, LPARAM lParam)
@@ -203,11 +187,13 @@ void WinWindow::doSave()
 
     m_config->setValue("REMOTE_ADDRESS", getText(EDIT_ADDRESS));
     m_config->setValue("USER", getText(EDIT_USERNAME));
-    m_config->setValue("PASS", Sha512(getText(EDIT_PASSWORD)).to_string());
+    if (getText(EDIT_PASSWORD))
+        m_config->setValue("PASS", Sha512(getText(EDIT_PASSWORD)).to_string());
 
-    m_config->save();
-
-    MessageBox(NULL, "Server connection info successfully saved.", "Success!",  MB_ICONINFORMATION | MB_OK);
+    if (m_config->save())
+        MessageBox(NULL, "Server connection info successfully saved.", "Success!",  MB_ICONINFORMATION | MB_OK);
+    else
+        MessageBox(NULL, "Server connection info could not be saved.", "Error!",  MB_ICONERROR | MB_OK);
 }
 
 void WinWindow::doRun(bool asService)
@@ -257,15 +243,7 @@ const char* WinWindow::getText(Field field)
 
 std::string WinWindow::getExecutablePath(bool asService)
 {
-    char cCurrentPath[FILENAME_MAX];
-    if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath)))
-    {
-        MessageBox(NULL, "Couldn't find current directory.", "Error!",  MB_ICONERROR | MB_OK);
-        return "";
-    }
-
-    std::string pathStart = cCurrentPath + std::string("\\");
-    std::string hstart = pathStart + "hstart.exe";
+    std::string hstart = Helper::getPathToFile("hstart.exe");
 
     std::string path;
 
@@ -282,7 +260,7 @@ std::string WinWindow::getExecutablePath(bool asService)
     else
         path = "";
 
-    std::string server = pathStart + serverExecutable;
+    std::string server = Helper::getPathToFile(serverExecutable);
     if (!Helper::file_exists(server))
     {
         MessageBox(NULL, "Please place file NOSA-Server.exe to application directory. ", "Error!",  MB_ICONERROR | MB_OK);
@@ -378,14 +356,14 @@ const char* WinWindow::checkValues()
     const char* username = getText(EDIT_USERNAME);
     const char* password = getText(EDIT_PASSWORD);
 
-    if (!address || !strlen(address) || !username || !strlen(username) || !password || !strlen(password))
+    if (!address || !strlen(address) || !username || !strlen(username) || ((!password || !strlen(password)) && !m_config->getString("PASS", "").c_str()))
         return "All fields must be filled before saving.";
 
     if (strlen(username) < 4)
-        return "Your username must be at least 5 characters long.";
+        return "Your username must be at least 4 characters long.";
 
-    if (strlen(password) < 5)
-        return "Your username must be at least 5 characters long.";
+    if (password && strlen(password) > 0 && strlen(password) < 5)
+        return "Your password must be at least 5 characters long.";
 
     return NULL;
 }

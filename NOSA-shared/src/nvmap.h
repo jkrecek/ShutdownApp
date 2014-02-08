@@ -22,6 +22,8 @@ public:
     std::string getString(std::string key, std::string defaultValue = "");
     int getInt(std::string key, int defaultValue = 0);
     float getFloat(std::string key, float defaultValue = 0.f);
+
+    std::string toString();
 };
 
 #endif // NVMAP_H

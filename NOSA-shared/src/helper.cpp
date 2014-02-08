@@ -270,3 +270,27 @@ bool Helper::request_privileges(LPCSTR values[])
 
     return true;
 }
+
+std::string Helper::getPathToFile(const char *fileName, bool extraBackslash)
+{
+    char szHelpFileName[_MAX_FNAME];
+
+    GetModuleFileName(NULL, szHelpFileName, sizeof(szHelpFileName));
+    char *cp = strrchr(szHelpFileName, '\\');
+    if(cp)
+       ++cp;
+    else
+    {
+       cp = strrchr(szHelpFileName, ':');
+       if( cp )
+          ++cp;
+       else
+          cp = szHelpFileName;
+    }
+    strcpy( cp, fileName );
+
+    if (extraBackslash)
+        return Helper::replace(szHelpFileName, "\\", "\\\\");
+    else
+        return szHelpFileName;
+}
