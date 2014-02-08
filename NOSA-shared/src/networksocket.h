@@ -50,7 +50,7 @@ public:
 
 protected:
     char* readLine();
-    char* readBuffer();
+    char* readBuffer(unsigned int existingLength = 0);
     void doClose();
 
     TCPSocket socket;

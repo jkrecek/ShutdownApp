@@ -48,7 +48,7 @@ char* NetworkSocket::readLine()
     char* line = NULL;
     if (size > 0)
     {
-        if (line = readBuffer())
+        if (line = readBuffer(0))
             return line;
     }
     else
@@ -65,9 +65,9 @@ char* NetworkSocket::readLine()
 
         size += newSize;
 
-        rest = readBuffer();
-    } while(!rest);
 
+        rest = readBuffer(line ? strlen(line) : 0);
+    } while(!rest);
 
     if (line == NULL)
         line = rest;
@@ -82,14 +82,15 @@ char* NetworkSocket::readLine()
     return line;
 }
 
-char* NetworkSocket::readBuffer()
+char* NetworkSocket::readBuffer(unsigned int existingLength)
 {
-    char* end = (char*)memchr(bufferPtr, '\n', size);
+    unsigned int increment = 4U - std::min(existingLength, 4U);
+    char* end = (char*)memchr(bufferPtr + increment, '\n', size);
     if (!end)
         return NULL;
 
     unsigned len = end - bufferPtr;
-    if (len < 5)
+    if (existingLength + len < 5)
         return NULL;
 
     char* res = new char[len + 1];
