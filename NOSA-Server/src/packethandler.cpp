@@ -10,137 +10,31 @@
     #include <arpa/inet.h>
 #endif
 
+typedef void(PacketHandler::*Handler)(SocketPacket* soPa);
 
+Handler commandHandlers[COMMAND_COUNT] = {
+    &PacketHandler::CommandNone,            // COMMAND_NONE
+    &PacketHandler::CommandTurnOff,         // COMMAND_TURN_OFF
+    &PacketHandler::CommandRestart,         // COMMAND_RESTART
+    &PacketHandler::CommandLogOff,          // COMMAND_LOG_OFF
+    &PacketHandler::CommandLock,            // COMMAND_LOCK
+    &PacketHandler::CommandSleep,           // COMMAND_SLEEP
+    &PacketHandler::CommandHibernate,       // COMMAND_HIBERNATE
+    &PacketHandler::CommandGetMac,          // COMMAND_GET_MAC
+    &PacketHandler::CommandTorrent,         // COMMAND_TORRENT
+    &PacketHandler::CommandGetVolume,       // COMMAND_GET_VOLUME
+    &PacketHandler::CommandSetVolume,       // COMMAND_SET_VOLUME
+    &PacketHandler::CommandNone,            // COMMAND_STATUS
+    &PacketHandler::CommandNone,            // COMMAND_GET_INFO
+};
 
-PacketHandler::PacketHandler(MainSocket *_socket)
-    : socket(_socket)
+void PacketHandler::handle(SocketPacket *sopa)
 {
-}
-
-void PacketHandler::accepted(Packet *packet)
-{
-    if (packet->isCommand("TURN_OFF")) {
-        Helper::request_privileges(SE_SHUTDOWN_NAME);
-        ExitWindowsEx(EWX_POWEROFF, SHTDN_REASON_MAJOR_APPLICATION);
-        socket->sendResponse(packet, "OK");
-        return;
-    }
-
-    if (packet->isCommand("RESTART")) {
-        Helper::request_privileges(SE_SHUTDOWN_NAME);
-        ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_APPLICATION);
-        socket->sendResponse(packet, "OK");
-        return;
-    }
-
-    if (packet->isCommand("LOGOFF")) {
-        Helper::request_privileges(SE_SHUTDOWN_NAME);
-        ExitWindowsEx(EWX_LOGOFF, SHTDN_REASON_MAJOR_APPLICATION);
-        socket->sendResponse(packet, "OK");
-        return;
-    }
-
-    if (packet->isCommand("LOCK")) {
-        LockWorkStation();
-        socket->sendResponse(packet, "OK");
-        return;
-    }
-
-    if (packet->isCommand("SLEEP")) {
-        Helper::request_privileges(SE_SHUTDOWN_NAME);
-        SetSystemPowerState(false, false);
-        socket->sendResponse(packet, "OK");
-        return;
-    }
-
-    if (packet->isCommand("HIBERNATE")) {
-        Helper::request_privileges(SE_SHUTDOWN_NAME);
-        SetSystemPowerState(true, false);
-        socket->sendResponse(packet, "OK");
-        return;
-    }
-
-    if (packet->isCommand("GET_MAC"))
+    Command command = sopa->getCommand();
+    if (command < COMMAND_COUNT)
     {
-        IpAddress serverIp = packet->getParameters();
-        const char * mac = socket->getMAC(&serverIp);
-        socket->sendResponse(packet, mac);
-        return;
+        (*this.*commandHandlers[command])(sopa);
     }
-
-    if (packet->isCommand("TORRENT"))
-    {
-        std::vector<std::string> series = getArgsByQuotation(packet->getParameters(), true);
-        std::list<EpisodeTorrent> torrents = getTorrentMagnets(packet);
-
-        filterTorrents(series, torrents);
-
-        socket->sendResponse(packet, "Torrents filtered, running magnet links", false);
-
-        runTorrents(torrents);
-
-        socket->sendResponse(packet, "Done", true);
-
-        return;
-    }
-
-    if (packet->isCommand("GET_VOLUME"))
-    {
-        float volume = sPCControl.getVolumeLevel();
-        const char* volumeLevel = Helper::to_string(volume);
-        socket->sendResponse(packet, volumeLevel);
-
-        return;
-    }
-
-    if (packet->isCommand("SET_VOLUME"))
-    {
-        float value = atof(packet->getParameters());
-        sPCControl.setVolumeLevel(value);
-        socket->sendResponse(packet, "OK");
-        return;
-    }
-}
-
-std::list<EpisodeTorrent> PacketHandler::getTorrentMagnets(Packet* packet)
-{
-    URLHandler handler;
-    std::list<EpisodeTorrent> list;
-
-    socket->sendResponse(packet, "Start downloading page", false);
-
-    std::string url_start = "http://thepiratebay.org/user/eztv/";
-    for (int i = 0; i < 5; ++i)
-    {
-        std::string url = url_start + Helper::to_string(i) + "/3";
-        std::string response = handler.loadUrl(url.c_str());
-        if (response.empty())
-            socket->sendResponse(packet, "Page return wrong http code", false);
-        else
-        {
-            socket->sendResponse(packet, "Page downloaded, parsing links now", false);
-            std::list<EpisodeTorrent> magnets = handler.getPirateBayMagnets(response);
-            list.insert(list.end(), magnets.begin(), magnets.end());
-        }
-    }
-    socket->sendResponse(packet, "Parse complete", false);
-
-    return list;
-}
-
-std::vector<std::string> PacketHandler::getArgsByQuotation(std::string arg, bool lower = false)
-{
-    std::vector<std::string> v;
-    for (std::size_t st = 0, en = 0; (st = arg.find('"', st)) != std::string::npos; st = en + 1)
-    {
-        en = arg.find('"', ++st);
-        if (lower)
-            v.push_back(Helper::toLowerCase(arg.substr(st, en - st)));
-        else
-            v.push_back(arg.substr(st, en - st-1));
-    }
-
-    return v;
 }
 
 void PacketHandler::filterTorrents(std::vector<std::string> series, std::list<EpisodeTorrent> &torrents)
@@ -189,4 +83,116 @@ void PacketHandler::runTorrents(const std::list<EpisodeTorrent> &torrents)
         std::string command = "start " + Helper::replace(magnetAppPath, "%1", (*itr).getMagnet().c_str());
         system(command.c_str());
     }
+}
+
+void PacketHandler::CommandNone(SocketPacket* soPa)
+{
+
+}
+
+void PacketHandler::CommandTurnOff(SocketPacket* soPa)
+{
+#ifdef _WIN32
+    Helper::request_privileges(SE_SHUTDOWN_NAME);
+    ExitWindowsEx(EWX_POWEROFF, SHTDN_REASON_MAJOR_APPLICATION);
+    soPa->respond("OK");
+#endif
+}
+
+void PacketHandler::CommandRestart(SocketPacket* soPa)
+{
+#ifdef _WIN32
+    Helper::request_privileges(SE_SHUTDOWN_NAME);
+    ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_APPLICATION);
+    soPa->respond("OK");
+#endif
+}
+
+void PacketHandler::CommandLogOff(SocketPacket* soPa)
+{
+#ifdef _WIN32
+    Helper::request_privileges(SE_SHUTDOWN_NAME);
+    ExitWindowsEx(EWX_LOGOFF, SHTDN_REASON_MAJOR_APPLICATION);
+    soPa->respond("OK");
+#endif
+}
+
+void PacketHandler::CommandLock(SocketPacket* soPa)
+{
+#ifdef _WIN32
+    LockWorkStation();
+    soPa->respond("OK");
+#endif
+}
+
+void PacketHandler::CommandSleep(SocketPacket* soPa)
+{
+#ifdef _WIN32
+    Helper::request_privileges(SE_SHUTDOWN_NAME);
+    SetSystemPowerState(false, false);
+    soPa->respond("OK");
+#endif
+}
+
+void PacketHandler::CommandHibernate(SocketPacket* soPa)
+{
+#ifdef _WIN32
+    Helper::request_privileges(SE_SHUTDOWN_NAME);
+    SetSystemPowerState(true, false);
+    soPa->respond("OK");
+#endif
+}
+
+void PacketHandler::CommandGetMac(SocketPacket* soPa)
+{
+    IpAddress serverIp = soPa->getParameters();
+    const char * mac = soPa->getSocket()->getMAC(&serverIp);
+    soPa->respond(mac);
+}
+
+void PacketHandler::CommandTorrent(SocketPacket* soPa)
+{
+    std::vector<std::string> series = Helper::getArgsByQuotation(soPa->getParameters(), true);
+    URLHandler handler;
+    std::list<EpisodeTorrent> torrents;
+
+    soPa->respond("Start downloading page", false);
+
+    std::string url_start = "http://thepiratebay.org/user/eztv/";
+    for (int i = 0; i < 5; ++i)
+    {
+        std::string url = url_start + Helper::to_string(i) + "/3";
+        std::string response = handler.loadUrl(url.c_str());
+        if (response.empty())
+            soPa->respond("Page return wrong http code", false);
+        else
+        {
+            soPa->respond("Page downloaded, parsing links now", false);
+            std::list<EpisodeTorrent> magnets = handler.getPirateBayMagnets(response);
+            torrents.insert(torrents.end(), magnets.begin(), magnets.end());
+        }
+    }
+    soPa->respond("Parse complete", false);
+
+    filterTorrents(series, torrents);
+
+    soPa->respond("Torrents filtered, running magnet links", false);
+
+    runTorrents(torrents);
+
+    soPa->respond("Done", true);
+}
+
+void PacketHandler::CommandGetVolume(SocketPacket* soPa)
+{
+    float volume = sPCControl.getVolumeLevel();
+    const char* volumeLevel = Helper::to_string(volume);
+    soPa->respond(volumeLevel);
+}
+
+void PacketHandler::CommandSetVolume(SocketPacket* soPa)
+{
+    float value = atof(soPa->getParameters());
+    sPCControl.setVolumeLevel(value);
+    soPa->respond("OK");
 }

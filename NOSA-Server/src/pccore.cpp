@@ -5,7 +5,7 @@
 #include "defines.h"
 
 PCCore::PCCore()
-    : BaseCore(), socket(NULL), handler(NULL)
+    : BaseCore(), socket(NULL)
 {
     std::cout << "Loading config ..." << std::endl;
     configuration = Configuration::loadFile(CONFIG_FILENAME);
@@ -27,11 +27,7 @@ PCCore::PCCore()
         return;
 
     socket = MainSocket::createSocket(configuration);
-    if (socket)
-    {
-        std::cout << "Connected!" << std::endl;
-        handler = new PacketHandler(socket);
-    }
+
 }
 
 PCCore::~PCCore()
@@ -46,7 +42,8 @@ int PCCore::run()
         while(socket->isOpen())
         {
             Packet packet = socket->readPacket();
-            handler->accepted(&packet);
+            SocketPacket sopa(socket, &packet);
+            handler.handle(&sopa);
         }
     }
     catch (SocketClosedException& /*e*/) { /* just interrupt */ }

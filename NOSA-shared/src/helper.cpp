@@ -8,8 +8,17 @@
 
 #ifdef _WIN32
     #include <Iphlpapi.h>
+    #define MAX_FILENAME _MAX_FNAME
+#else
+    #include <linux/limits.h>
+    #include <unistd.h>
+    #define MAX_FILENAME NAME_MAX
+    #define _snprintf_s(a,b,c,...) snprintf(a,b,__VA_ARGS__)
 #endif
 
+#ifndef _TRUNCATE
+    #define _TRUNCATE ((size_t)-1)
+#endif
 #define MAC_SIZE 17
 #define IPV6_SIZE 40
 
@@ -52,6 +61,150 @@ std::string Helper::replace(std::string s, const char *from, const char *to)
     }
 
     return s;
+}
+
+
+bool Helper::iequals(const std::string& a, const std::string& b)
+{
+    return a.size() == b.size() && toLowerCase(a) == toLowerCase(b);
+}
+
+const char* Helper::to_string(int val)
+{
+    char str[64];
+    sprintf(str, "%d", val);
+    return strdup(str);
+}
+
+const char* Helper::to_string(float val)
+{
+    char str[64];
+    sprintf(str, "%f", val);
+    return strdup(str);
+}
+
+const char* Helper::stripNewLine(const char* ori)
+{
+    if (ori[strlen(ori)-1] == '\n')
+    {
+        return strndup(ori, strlen(ori)-1);
+    }
+
+    return ori;
+}
+
+char* Helper::strndup(const char *s, size_t n) {
+#ifdef _WIN32
+    char* res = new char[n+1];
+    strncpy(res, s, n);
+    res[n] = '\0';
+    return res;
+#else
+    return ::strndup(s, n);
+#endif
+}
+
+void Helper::printBytes(char **bytes, unsigned printMax)
+{
+    if (!printMax)
+        printMax = strlen(*bytes);
+
+    std::cout << "Len: " << strlen(*bytes) << ", bytes: ";
+    for (int i = 0; i < printMax; ++i)
+        std::cout << (int) (*bytes)[i] << " ";
+
+    std::cout << std::endl;
+}
+
+bool Helper::file_exists(const std::string &name)
+{
+    struct stat fileInfo;
+    return stat(name.c_str(), &fileInfo) == 0;
+}
+
+std::string Helper::fromDecimal(ullint n, ullint b)
+{
+    char buffer[17];
+    buffer[16] = '\0';
+    int c;
+    for(int i = 15; i >= 0; --i)
+    {
+        c = n % b;
+        buffer[i] = c < 10 ? 48+c : 87+c;
+        n /= b;
+    }
+
+    return strdup(buffer);
+}
+
+size_t Helper::position_of_char(const char *text, char ch) {
+    char* end = (char*)memchr(text, ch, strlen(text));
+    if (!end)
+        return std::string::npos;
+
+    return end - text;
+}
+
+std::string Helper::getPathToFile(const char *fileName, bool extraBackslash)
+{
+    char buffer[MAX_FILENAME];
+
+#ifdef __WIN32
+    GetModuleFileName(NULL, buffer, sizeof(buffer));
+#else
+    readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+#endif
+    char *cp = strrchr(buffer, '\\');
+    if(cp)
+       ++cp;
+    else
+    {
+       cp = strrchr(buffer, ':');
+       if( cp )
+          ++cp;
+       else
+          cp = buffer;
+    }
+    strcpy( cp, fileName );
+
+    if (extraBackslash)
+        return Helper::replace(buffer, "\\", "\\\\");
+    else
+        return buffer;
+}
+
+char* Helper::ipv6_string(in6_addr& addr)
+{
+#ifdef __WIN32
+    u_short* part = (u_short*)&addr.u.Word;
+#else
+    u_short* part = (u_short*)&addr.__in6_u.__u6_addr16;
+#endif
+    char buffer[IPV6_SIZE];
+    _snprintf_s(buffer, _TRUNCATE, IPV6_SIZE, "%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",
+        part[0], part[1],
+        part[2], part[3],
+        part[4], part[5],
+        part[6], part[7]);
+
+    buffer[IPV6_SIZE-1] = '\0';
+
+    return strdup(buffer);
+}
+
+StringVector Helper::getArgsByQuotation(std::string arg, bool lower = false)
+{
+    StringVector v;
+    for (std::size_t st = 0, en = 0; (st = arg.find('"', st)) != std::string::npos; st = en + 1)
+    {
+        en = arg.find('"', ++st);
+        if (lower)
+            v.push_back(Helper::toLowerCase(arg.substr(st, en - st)));
+        else
+            v.push_back(arg.substr(st, en - st-1));
+    }
+
+    return v;
 }
 
 #ifdef _WIN32
@@ -161,88 +314,6 @@ const char* Helper::getMAC(IpAddress* clientIp = NULL, IpAddress* serverIp = NUL
     delete adapterInfo;
     return mac_addr;
 }
-#endif
-
-bool Helper::iequals(const std::string& a, const std::string& b)
-{
-    return a.size() == b.size() && toLowerCase(a) == toLowerCase(b);
-}
-
-const char* Helper::to_string(int val)
-{
-    char str[64];
-    sprintf(str, "%d", val);
-    return strdup(str);
-}
-
-const char* Helper::to_string(float val)
-{
-    char str[64];
-    sprintf(str, "%f", val);
-    return strdup(str);
-}
-
-const char* Helper::stripNewLine(const char* ori)
-{
-    if (ori[strlen(ori)-1] == '\n')
-    {
-        return strndup(ori, strlen(ori)-1);
-    }
-
-    return ori;
-}
-
-char* Helper::strndup(const char *s, size_t n) {
-#ifdef _WIN32
-    char* res = new char[n+1];
-    strncpy(res, s, n);
-    res[n] = '\0';
-    return res;
-#else
-    return ::strndup(s, n);
-#endif
-}
-
-void Helper::printBytes(char **bytes, unsigned printMax)
-{
-    if (!printMax)
-        printMax = strlen(*bytes);
-
-    std::cout << "Len: " << strlen(*bytes) << ", bytes: ";
-    for (int i = 0; i < printMax; ++i)
-        std::cout << (int) (*bytes)[i] << " ";
-
-    std::cout << std::endl;
-}
-
-bool Helper::file_exists(const std::string &name)
-{
-    struct stat fileInfo;
-    return stat(name.c_str(), &fileInfo) == 0;
-}
-
-std::string Helper::fromDecimal(ullint n, ullint b)
-{
-    char buffer[17];
-    buffer[16] = '\0';
-    int c;
-    for(int i = 15; i >= 0; --i)
-    {
-        c = n % b;
-        buffer[i] = c < 10 ? 48+c : 87+c;
-        n /= b;
-    }
-
-    return strdup(buffer);
-}
-
-size_t Helper::position_of_char(const char *text, char ch) {
-    char* end = (char*)memchr(text, ch, strlen(text));
-    if (!end)
-        return std::string::npos;
-
-    return end - text;
-}
 
 bool Helper::request_privileges(LPCSTR value)
 {
@@ -271,42 +342,4 @@ bool Helper::request_privileges(LPCSTR values[])
 
     return true;
 }
-
-std::string Helper::getPathToFile(const char *fileName, bool extraBackslash)
-{
-    char szHelpFileName[_MAX_FNAME];
-
-    GetModuleFileName(NULL, szHelpFileName, sizeof(szHelpFileName));
-    char *cp = strrchr(szHelpFileName, '\\');
-    if(cp)
-       ++cp;
-    else
-    {
-       cp = strrchr(szHelpFileName, ':');
-       if( cp )
-          ++cp;
-       else
-          cp = szHelpFileName;
-    }
-    strcpy( cp, fileName );
-
-    if (extraBackslash)
-        return Helper::replace(szHelpFileName, "\\", "\\\\");
-    else
-        return szHelpFileName;
-}
-
-char* Helper::ipv6_string(in6_addr& addr)
-{
-    u_short* part = (u_short*)&addr.u.Word;
-    char buffer[IPV6_SIZE];
-    _snprintf_s(buffer, _TRUNCATE, IPV6_SIZE, "%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",
-        part[0], part[1],
-        part[2], part[3],
-        part[4], part[5],
-        part[6], part[7]);
-
-    buffer[IPV6_SIZE-1] = '\0';
-
-    return strdup(buffer);
-}
+#endif

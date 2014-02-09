@@ -20,14 +20,6 @@
 #endif
 
 
-enum Command {
-    NONE,
-    POWER_OFF,
-    RESTART,
-    LOCK,
-    SLEEP
-};
-
 class ServerControl
 {
 public:

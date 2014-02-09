@@ -1,6 +1,8 @@
 #ifndef PACKET_H
 #define PACKET_H
 
+#include "commandhandler.h"
+
 class Packet
 {
 public:
@@ -11,8 +13,8 @@ public:
     unsigned getRequestId() const { return m_requestId; }
     const char* getMessage() const { return m_message; }
     unsigned getSize() const;
-    bool isCommand(const char* command);
-    const char* getCommand();
+    bool isCommand(Command command);
+    Command getCommand();
     const char* getParameters();
 
     Packet responsePacket(const char* message);
@@ -21,6 +23,7 @@ public:
 private:
     Packet();
 
+    Command m_command;
     unsigned m_requestId;
     const char* m_message;
 };

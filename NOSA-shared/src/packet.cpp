@@ -1,6 +1,7 @@
 #include "packet.h"
 #include <iostream>
 #include "helper.h"
+#include "singleton.h"
 
 #ifdef _WIN32
     #include "winsock.h"
@@ -67,18 +68,25 @@ Packet Packet::responsePacket(const char *message)
     return packet;
 }
 
-bool Packet::isCommand(const char *command) {
-    const char* cmd = getCommand();
-    return cmd && strcmp(cmd, command) == 0;
+bool Packet::isCommand(Command command) {
+    return command == getCommand();
 }
 
-const char* Packet::getCommand()
+Command Packet::getCommand()
 {
-    size_t position = Helper::position_of_char(m_message, ' ');
-    if (position != std::string::npos)
-        return Helper::strndup(m_message, position);
+    if (!m_command)
+    {
+        size_t position = Helper::position_of_char(m_message, ' ');
+        std::string strCommand;
+        if (position != std::string::npos)
+            strCommand = Helper::strndup(m_message, position);
+        else
+            strCommand = m_message;
 
-    return m_message;
+        m_command = Singleton<CommandHandler>::getInstance().getCommand(strCommand);
+    }
+
+    return m_command;
 }
 
 const char* Packet::getParameters()

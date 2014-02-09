@@ -22,7 +22,7 @@ public:
 private:
     bool initialized;
     MainSocket* socket;
-    PacketHandler* handler;
+    PacketHandler handler;
     Configuration* configuration;
 };
 
