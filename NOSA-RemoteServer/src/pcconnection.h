@@ -6,7 +6,7 @@
 class PCConnection : public BaseConnection
 {
 public:
-    PCConnection(NetworkSocket* _socket);
+    PCConnection(NetworkSocket* _socket, std::string user, std::string pass);
 
     void redistributePacket(Packet* packet);
     bool handlePacket(Packet* packet);

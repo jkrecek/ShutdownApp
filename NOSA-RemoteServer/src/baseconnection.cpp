@@ -7,8 +7,8 @@
 
 #include <iostream>
 
-BaseConnection::BaseConnection(NetworkSocket *_socket, ConnectionType _type)
-    : socket(_socket), type(_type)
+BaseConnection::BaseConnection(NetworkSocket *_socket, ConnectionType _type, std::string _user, std::string _pass)
+    : socket(_socket), type(_type), user(_user), pass(_pass)
 {
 }
 
@@ -27,25 +27,27 @@ BaseConnection* BaseConnection::estabilishConnection(NetworkSocket *socket)
         !parameters.contains("user") ||
         !parameters.contains("pass"))
     {
-        std::cout << "Invalid parameters supplied:" << std::endl;
-        for (NVMap::iterator itr = parameters.begin(); itr != parameters.end(); ++itr)
-            std::cout << "-- Name: " << itr->first << ", Value: " << itr->second << std::endl;
+        std::cout << "Invalid login message, terminating connection." << std::endl;
         return NULL;
     }
 
-    BaseConnection* connection = NULL;
+    std::string user = parameters.get("user");
+    std::string pass = parameters.get("pass");
     if (Helper::iequals(parameters.get("type"), "ANDROID"))
-        connection = new AndroidConnection(socket);
-    else if (Helper::iequals(parameters.get("type"), "PC"))
-        connection = new PCConnection(socket);
+        return new AndroidConnection(socket, user, pass);
+    else if (Helper::iequals(parameters.get("type"), "PC")) {
+        PCConnection * existing = sConnections.getPCConnection(user, pass);
+        if (!existing)
+            return new PCConnection(socket, user, pass);
+        else
+        {
+            std::cout << "Connection already exists" << std::endl;
+            socket->sendResponse(&packet, "ALREADY_EXISTS");
+            return NULL;
+        }
+    }
     else
         return NULL;
-
-    connection->user = parameters.get("user");
-    connection->pass = parameters.get("pass");
-
-    return connection;
-
 }
 
 void BaseConnection::read()

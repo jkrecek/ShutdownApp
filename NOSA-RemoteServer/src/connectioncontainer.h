@@ -32,7 +32,8 @@ public:
 
     void insert(BaseConnection* connection);
 
-    PCConnection* getPCConnection(AndroidConnection* con);
+    PCConnection* getPCConnection(BaseConnection* con);
+    PCConnection* getPCConnection(std::string user, std::string pass);
     std::vector<AndroidConnection*> getAndroidConnections(PCConnection* con);
 
     void remove(BaseConnection* connection);

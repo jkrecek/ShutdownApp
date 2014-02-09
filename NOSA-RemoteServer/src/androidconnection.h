@@ -6,7 +6,7 @@
 class AndroidConnection : public BaseConnection
 {
 public:
-    AndroidConnection(NetworkSocket* _socket);
+    AndroidConnection(NetworkSocket* _socket, std::string user, std::string pass);
 
     void redistributePacket(Packet* packet);
     bool handlePacket(Packet* packet);

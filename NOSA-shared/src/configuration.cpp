@@ -73,7 +73,6 @@ IpAddress Configuration::getIpAddress(std::string key)
     return IpAddress(values.get(key).c_str());
 }
 
-
 bool Configuration::isEmpty(std::string key)
 {
     return values.get(key).empty();

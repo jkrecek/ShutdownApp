@@ -29,7 +29,7 @@ public:
     virtual bool handlePacket(Packet* packet) = 0;
 
 protected:
-    BaseConnection(NetworkSocket* _socket, ConnectionType type);
+    BaseConnection(NetworkSocket* _socket, ConnectionType _type, std::string _user, std::string _pass);
 
     NetworkSocket* socket;
     ConnectionType type;

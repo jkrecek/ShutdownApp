@@ -39,8 +39,8 @@ ServerSocket* ServerSocket::createSocket(int port)
 
 NetworkSocket* ServerSocket::acceptConnection()
 {
+    static SocketLength addrLen = sizeof(sockaddr_in);
     sockaddr_in clientInfo;
-    SocketLength addrLen = sizeof(clientInfo);
     TCPSocket clientSocket = accept(socket, (sockaddr*)&clientInfo, &addrLen);
     return new NetworkSocket(clientSocket, clientInfo);
 }

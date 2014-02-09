@@ -1,8 +1,8 @@
 #include "pcconnection.h"
 #include "connectioncontainer.h"
 
-PCConnection::PCConnection(NetworkSocket* _socket)
-    : BaseConnection(_socket, TYPE_PC)
+PCConnection::PCConnection(NetworkSocket *_socket, std::string user, std::string pass)
+    : BaseConnection(_socket, TYPE_PC, user, pass)
 {
 
 }

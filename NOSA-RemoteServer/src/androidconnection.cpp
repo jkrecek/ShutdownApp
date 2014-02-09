@@ -2,8 +2,8 @@
 #include "connectioncontainer.h"
 #include "singleton.h"
 
-AndroidConnection::AndroidConnection(NetworkSocket* _socket)
-    : BaseConnection(_socket, TYPE_ANDROID)
+AndroidConnection::AndroidConnection(NetworkSocket *_socket, std::string user, std::string pass)
+    : BaseConnection(_socket, TYPE_ANDROID, user, pass)
 {
 
 }

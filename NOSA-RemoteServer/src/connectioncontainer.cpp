@@ -32,12 +32,15 @@ void ConnectionContainer::insert(BaseConnection* connection)
     if (connection->getType() != TYPE_COUNT)
         container[connection->getType()].push_back(connection);
 }
+PCConnection* ConnectionContainer::getPCConnection(BaseConnection* con)
+{
+    return getPCConnection(con->getUser(), con->getPass());
+}
 
-
-PCConnection* ConnectionContainer::getPCConnection(AndroidConnection* con)
+PCConnection* ConnectionContainer::getPCConnection(std::string user, std::string pass)
 {
     for (ConnectionVector::iterator itr = container[TYPE_PC].begin(); itr != container[TYPE_PC].end(); ++itr)
-        if (con->getUser() == (*itr)->getUser() && con->getPass() == (*itr)->getPass())
+        if (user == (*itr)->getUser() && pass == (*itr)->getPass())
             return (PCConnection*)*itr;
 
     return NULL;
