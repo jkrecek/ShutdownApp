@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #ifdef _WIN32
+    #include <In6addr.h>
     #include <windows.h>
 #endif
 #include "ipaddress.h"
@@ -32,6 +33,7 @@ public:
     static bool request_privileges(LPCSTR value);
     static bool request_privileges(LPCSTR values[]);
     static std::string getPathToFile(const char* fileName, bool extraBackslash = false);
+    static char* ipv6_string(in6_addr& addr);
 
 #ifdef _WIN32
     static std::string GetSZValueUnique( HKEY openKey, const char* regkey, const char* keyName );

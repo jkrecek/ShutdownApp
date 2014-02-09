@@ -41,7 +41,7 @@ bool Configuration::saveToFile(const char *file)
 {
     std::ofstream outfile(file, std::ofstream::out);
     if (outfile.good()) {
-        outfile << values.toString();
+        outfile << values.toString('\n');
         return true;
     }
     else

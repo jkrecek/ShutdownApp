@@ -11,6 +11,7 @@
 #endif
 
 #define MAC_SIZE 17
+#define IPV6_SIZE 40
 
 StringVector &Helper::split(const std::string &s, char delim, StringVector &elems)
 {
@@ -293,4 +294,19 @@ std::string Helper::getPathToFile(const char *fileName, bool extraBackslash)
         return Helper::replace(szHelpFileName, "\\", "\\\\");
     else
         return szHelpFileName;
+}
+
+char* Helper::ipv6_string(in6_addr& addr)
+{
+    u_short* part = (u_short*)&addr.u.Word;
+    char buffer[IPV6_SIZE];
+    _snprintf_s(buffer, _TRUNCATE, IPV6_SIZE, "%04X:%04X:%04X:%04X:%04X:%04X:%04X:%04X",
+        part[0], part[1],
+        part[2], part[3],
+        part[4], part[5],
+        part[6], part[7]);
+
+    buffer[IPV6_SIZE-1] = '\0';
+
+    return strdup(buffer);
 }
