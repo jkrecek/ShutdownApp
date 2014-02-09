@@ -1,8 +1,7 @@
 package com.frca.shutdownandroid.classes;
 
-/**
- * Created by KillerFrca on 31.1.14.
- */
+import com.frca.shutdownandroid.network.NetworkThread;
+
 public class ProxyConnection extends Connection{
 
     private String username;
@@ -15,12 +14,42 @@ public class ProxyConnection extends Connection{
         this.passwordHash = passwordHash;
     }
 
-    public String getUsername() {
-        return username;
+    @Override
+    public void loadInfo(NetworkThread thread, final ConnectionList list) {
+        thread.sendMessage(this, "GET_INFO", new NetworkThread.OnMessageReceived() {
+            @Override
+            public void messageReceived(String message) {
+                if (message.startsWith("ERROR"))
+                    return;
+
+                NVMap map = new NVMap();
+                String[] args = message.split(" ");
+                map.appendPairs(args, '=');
+
+                String value;
+                value = map.getString("host", null);
+                if (value != null)
+                    hostname = value;
+
+                value = map.getString("mac", null);
+                if (value != null)
+                    mac = value;
+
+                value = map.getString("ip", null);
+                if (value != null)
+                    localIp = value;
+
+                list.saveToPrefs();
+            }
+        });
     }
 
     @Override
     public String getStringIdentifier() {
+        return username;
+    }
+
+    public String getUsername() {
         return username;
     }
 

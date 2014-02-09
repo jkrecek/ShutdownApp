@@ -13,9 +13,6 @@ import com.frca.shutdownandroid.classes.ControlAction;
 
 import java.util.List;
 
-/**
- * Created by KillerFrca on 7.12.13.
- */
 public class ControlGridAdapter extends ArrayAdapter<ControlAction> {
 
     private int resourceId;

@@ -32,19 +32,10 @@ import com.frca.shutdownandroid.network.http.HttpTask;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by KillerFrca on 1.12.13.
- */
 public class ControlFragment extends BaseFragment implements AdapterView.OnItemClickListener {
-
-    /*enum DisplayState {
-        LOADING,
-        DISPLAY
-    }*/
 
     private Connection connection;
 
-    private String currentMessage;
 
     private LinearLayout loadingLayout;
 
@@ -207,20 +198,13 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
                     for (String ser : list) {
                         ser = ser.replaceAll("\\.", " ");
                         ser = ser.replaceAll("-", " ");
-                        sb.append("\""+ser+"\", ");
+                        sb.append("\"" + ser + "\", ");
                     }
 
                     thread.sendMessage(sb.toString(), new NetworkThread.OnMessageReceived() {
                         @Override
                         public void messageReceived(String message) {
-                            /*if (!currentMessage.equals(""))
-                                currentMessage += "\n";
-
-                            currentMessage += message;
-
-                            dialog.setMessage(currentMessage);
-                            if (!dialog.isShowing())
-                                dialog.show();*/
+                            // TODO
                         }
                     });
                 }
@@ -299,7 +283,7 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
                             return;
                         }
 
-                        String packetString = usernameView.getText().toString();
+                        String packetString = usernameView.getText().toString().trim();
                         thread.sendMessage(packetString);
                     }
                 }).setNegativeButton(android.R.string.cancel, MainActivity.dismissListener).create().show();

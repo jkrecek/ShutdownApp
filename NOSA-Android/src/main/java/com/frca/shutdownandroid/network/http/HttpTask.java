@@ -41,16 +41,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by KillerFrca on 6.12.13.
- */
 public class HttpTask extends AsyncTask<Void, Void, List<String>> {
 
     public final static String USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.101 Safari/537.36";
-
-    /*public static final String KEY_USERNAME = "utorrent_username";
-
-    public static final String KEY_PASSWORD = "utorrent_password";*/
 
     private static final String URL_LOGIN = "http://www.serialzone.cz/prihlasovani/";
 

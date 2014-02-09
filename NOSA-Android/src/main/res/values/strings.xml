@@ -27,4 +27,7 @@
     <string name="summary_utorrent_password">Set password you want to use while connecting to uTorrent download list</string>
     <string name="dialog_utorrent_password">Set password</string>
 
+    <string name="drawer_open">Opening ...</string>
+    <string name="drawer_close">Closing ...</string>
+
 </resources>

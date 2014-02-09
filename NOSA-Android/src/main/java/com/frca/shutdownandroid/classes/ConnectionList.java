@@ -19,6 +19,8 @@ public class ConnectionList<T extends Connection> extends SparseArray<T> {
 
     private static Gson gsonDeserializationInstance;
 
+    private SharedPreferences preferences;
+
     public ConnectionList() {
         super();
     }
@@ -45,7 +47,7 @@ public class ConnectionList<T extends Connection> extends SparseArray<T> {
     }
 
     public static ConnectionList loadFromPrefs(SharedPreferences preferences) {
-        ConnectionList list = new ConnectionList();
+        ConnectionList list;
         Gson gson = getGsonDeserializationInstance();
         String values = preferences.getString(KEY_CONNECTIONS, null);
         if (values != null) {
@@ -53,7 +55,10 @@ public class ConnectionList<T extends Connection> extends SparseArray<T> {
             list = new ConnectionList(array);
             Connection lastConnection = array[array.length - 1];
             Connection.setIdBuffer(lastConnection.getGeneratedId() + 1);
-        }
+        } else
+            list =  new ConnectionList();
+
+        list.preferences = preferences;
 
         return list;
     }
@@ -67,9 +72,8 @@ public class ConnectionList<T extends Connection> extends SparseArray<T> {
         put(connection.getGeneratedId(), connection);
     }
 
-    public void saveToPrefs(SharedPreferences preferences) {
+    public void saveToPrefs() {
         Gson gson = new Gson();
-        String str = gson.toJson(toArray());
         preferences.edit().putString(KEY_CONNECTIONS, gson.toJson(toArray())).commit();
     }
 

@@ -8,9 +8,6 @@ import com.frca.shutdownandroid.network.NetworkThread;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by KillerFrca on 7.12.13.
- */
 public enum ControlAction {
     POWER_ON(R.drawable.restart, "Turn on", ControlFragment.turnOnControlClick, ConnectionState.OFFLINE),
     POWER_OFF(R.drawable.turn_off, "Shutdown", ControlFragment.basicControlClick, ConnectionState.ONLINE),

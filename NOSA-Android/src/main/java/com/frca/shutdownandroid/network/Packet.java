@@ -40,9 +40,6 @@ public class Packet {
             buffer[++pos] = packetByte;
         } while (pos < 1024);
 
-        // skip C end of string
-        inputStream.skipBytes(1);
-
         return new Packet(packetInt, getReceivedString(new String(buffer)));
     }
 

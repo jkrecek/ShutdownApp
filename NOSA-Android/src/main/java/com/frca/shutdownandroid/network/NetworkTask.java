@@ -16,9 +16,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * Created by KillerFrca on 1.12.13.
- */
 public class NetworkTask extends Thread implements Runnable {
 
     private static final int DISCONNECT_INTERVAL = 15000;

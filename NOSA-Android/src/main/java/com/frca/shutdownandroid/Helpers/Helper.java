@@ -18,9 +18,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 
-/**
- * Created by KillerFrca on 7.12.13.
- */
 public abstract class Helper {
 
     public static void sendWoLMagicPacket(final String broadcastIp, final String macAddress) {

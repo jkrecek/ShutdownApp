@@ -1,20 +1,23 @@
-package com.frca.shutdownandroid.adapters;
+package com.frca.shutdownandroid.adapters.base;
 
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-public abstract class TwoLineArrayAdapter<T> extends ArrayAdapter<T> {
+import com.frca.shutdownandroid.R;
+
+public abstract class IconTwoLineArrayAdapter<T> extends ArrayAdapter<T> {
     private int mListItemLayoutResId;
 
-    public TwoLineArrayAdapter(Context context, T[] ts) {
-        this(context, android.R.layout.two_line_list_item, ts);
+    public IconTwoLineArrayAdapter(Context context, T[] ts) {
+        this(context, R.layout.icon_two_line_list_item, ts);
     }
 
-    public TwoLineArrayAdapter(Context context,int listItemLayoutResourceId,T[] ts) {
+    public IconTwoLineArrayAdapter(Context context, int listItemLayoutResourceId, T[] ts) {
         super(context, listItemLayoutResourceId, ts);
         mListItemLayoutResId = listItemLayoutResourceId;
     }
@@ -28,10 +31,12 @@ public abstract class TwoLineArrayAdapter<T> extends ArrayAdapter<T> {
             listItemView = inflater.inflate(mListItemLayoutResId, parent, false);
         }
 
+        ImageView icon = (ImageView)listItemView.findViewById(R.id.icon);
         TextView firstView = (TextView)listItemView.findViewById(android.R.id.text1);
         TextView secondView = (TextView)listItemView.findViewById(android.R.id.text2);
 
         T t = getItem(position);
+        icon.setImageResource(getIconDrawable(t));
         firstView.setText(getFirstLine(t));
         secondView.setText(getSecondLine(t));
 
@@ -42,6 +47,8 @@ public abstract class TwoLineArrayAdapter<T> extends ArrayAdapter<T> {
     public View getDropDownView(int position, View convertView, ViewGroup parent) {
         return getView(position, convertView, parent);
     }
+
+    public abstract int getIconDrawable(T t);
 
     public abstract String getFirstLine(T t);
 

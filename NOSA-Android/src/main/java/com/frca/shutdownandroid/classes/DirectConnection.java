@@ -1,8 +1,7 @@
 package com.frca.shutdownandroid.classes;
 
-/**
- * Created by KillerFrca on 31.1.14.
- */
+import com.frca.shutdownandroid.network.NetworkThread;
+
 public class DirectConnection extends Connection {
 
     private String ip;
@@ -12,6 +11,11 @@ public class DirectConnection extends Connection {
         this.ip = ip;
         this.mac = mac;
         this.hostname = hostname;
+    }
+
+    @Override
+    public void loadInfo(NetworkThread thread, ConnectionList list) {
+
     }
 
     @Override

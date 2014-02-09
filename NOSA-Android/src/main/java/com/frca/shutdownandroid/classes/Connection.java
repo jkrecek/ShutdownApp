@@ -4,7 +4,7 @@ import com.frca.shutdownandroid.network.NetworkThread;
 
 import java.io.Serializable;
 
-public class Connection implements Serializable {
+public abstract class Connection implements Serializable {
 
     public enum ConnectionType {
         DIRECT(DirectConnection.class),
@@ -87,7 +87,9 @@ public class Connection implements Serializable {
             thread.pingConnection(this, result);
     }
 
-    public String getStringIdentifier() { return  null; }
+    public abstract void loadInfo(NetworkThread thread, final ConnectionList list);
+
+    public abstract String getStringIdentifier();
 
     public interface PingResult {
         public void result(boolean success);

@@ -15,9 +15,6 @@ import com.frca.shutdownandroid.R;
 import com.frca.shutdownandroid.classes.Connection;
 import com.frca.shutdownandroid.classes.ControlAction;
 
-/**
- * Created by KillerFrca on 1.12.13.
- */
 public class MainFragment extends BaseFragment {
 
     private static final String EXTRA_ID = "id";
@@ -99,20 +96,6 @@ public class MainFragment extends BaseFragment {
             }
         });
     }
-
-    /*private void refreshChild(boolean success) {
-        if (getActivity() == null)
-            return;
-
-        if (currentChildFragment != null) {
-            if (success ? currentChildFragment instanceof ControlFragment : currentChildFragment instanceof OfflineFragment) {
-                return;
-            }
-        }
-
-        currentChildFragment = success ? new ControlFragment() : new OfflineFragment(connection);
-        getChildFragmentManager().beginTransaction().replace(R.id.child_container, currentChildFragment).commit();
-    }*/
 
     public Connection getConnection() {
         return connection;

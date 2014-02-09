@@ -20,9 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-/**
- * Created by KillerFrca on 28.11.13.
- */
 public class NetworkThread /*extends Thread implements Runnable */ {
 
     public static final String KEY_PROXY_HOST = "proxy_host";
