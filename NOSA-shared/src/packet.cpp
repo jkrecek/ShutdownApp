@@ -15,12 +15,7 @@
 #endif
 
 Packet::Packet(unsigned requestId, const char *message)
-    : m_requestId(requestId), m_message(message)
-{
-
-}
-
-Packet::Packet()
+    : m_requestId(requestId), m_message(message), m_command(COMMAND_NONE)
 {
 
 }
@@ -30,9 +25,7 @@ Packet Packet::fromBytes(char *bytes)
     char intBuffer[sizeof(uint32_t)];
     memcpy(intBuffer, bytes, sizeof(uint32_t));
 
-    Packet packet;
-    packet.m_requestId = ntohl(*(uint32_t*)intBuffer);
-    packet.m_message = strdup(bytes + sizeof(uint32_t));
+    Packet packet(ntohl(*(uint32_t*)intBuffer), strdup(bytes + sizeof(uint32_t)));
     delete[] bytes;
     return packet;
 }
@@ -62,10 +55,7 @@ const char* Packet::escape(const char* message)
 
 Packet Packet::responsePacket(const char *message)
 {
-    Packet packet;
-    packet.m_requestId = m_requestId;
-    packet.m_message = message;
-    return packet;
+    return Packet(m_requestId, message);
 }
 
 bool Packet::isCommand(Command command) {
@@ -74,7 +64,7 @@ bool Packet::isCommand(Command command) {
 
 Command Packet::getCommand()
 {
-    if (!m_command)
+    if (m_command == COMMAND_NONE)
     {
         size_t position = Helper::position_of_char(m_message, ' ');
         std::string strCommand;

@@ -21,8 +21,6 @@ public:
     void respond(const char* message);
     const char* escape(const char* message);
 private:
-    Packet();
-
     Command m_command;
     unsigned m_requestId;
     const char* m_message;
