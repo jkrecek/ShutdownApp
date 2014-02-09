@@ -241,7 +241,7 @@ public class MainActivity extends Activity {
     }
 
     public void establishInitialProxyConnection(final ProxyConnection connection) {
-        NetworkThread nt = getThread();
+        final NetworkThread nt = getThread();
         nt.sendMessage(connection,
             "STATUS",
             new NetworkThread.OnMessageReceived() {
@@ -249,6 +249,7 @@ public class MainActivity extends Activity {
                 public void messageReceived(final String response) {
                     if (response.equals("ONLINE")) {
                         connections.add(connection);
+                        connection.loadInfo(nt, getReloadAdapterRunnable());
                         reloadAdapter(true);
                         displayConnectionFragment(connection);
                     } else if (response.equals("OFFLINE")) {
