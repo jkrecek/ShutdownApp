@@ -87,7 +87,7 @@ public abstract class Connection implements Serializable {
             thread.pingConnection(this, result);
     }
 
-    public abstract void loadInfo(NetworkThread thread, final ConnectionList list);
+    public abstract void loadInfo(NetworkThread thread, final Runnable onUpdatedInfo);
 
     public abstract String getStringIdentifier();
 

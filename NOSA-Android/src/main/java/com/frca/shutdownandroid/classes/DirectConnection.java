@@ -14,7 +14,7 @@ public class DirectConnection extends Connection {
     }
 
     @Override
-    public void loadInfo(NetworkThread thread, ConnectionList list) {
+    public void loadInfo(NetworkThread thread, Runnable onUpdatedInfo) {
 
     }
 

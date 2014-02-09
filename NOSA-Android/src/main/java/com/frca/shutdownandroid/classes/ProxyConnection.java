@@ -15,7 +15,7 @@ public class ProxyConnection extends Connection{
     }
 
     @Override
-    public void loadInfo(NetworkThread thread, final ConnectionList list) {
+    public void loadInfo(NetworkThread thread, final Runnable onUpdatedInfo) {
         thread.sendMessage(this, "GET_INFO", new NetworkThread.OnMessageReceived() {
             @Override
             public void messageReceived(String message) {
@@ -39,7 +39,7 @@ public class ProxyConnection extends Connection{
                 if (value != null)
                     localIp = value;
 
-                list.saveToPrefs();
+                onUpdatedInfo.run();
             }
         });
     }

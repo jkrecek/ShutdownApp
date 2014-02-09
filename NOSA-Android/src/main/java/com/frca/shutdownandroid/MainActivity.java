@@ -271,9 +271,24 @@ public class MainActivity extends Activity {
         for(int i = 0; i < connections.size(); ++i) {
             Connection connection = (Connection) connections.valueAt(i);
             if (TextUtils.isEmpty(connection.getHostname())) {
-                connection.loadInfo(getThread(), connections);
+                connection.loadInfo(getThread(), getReloadAdapterRunnable());
             }
         }
+    }
+
+    private Runnable reloadAdapterRun;
+
+    private Runnable getReloadAdapterRunnable() {
+        if (reloadAdapterRun == null) {
+            reloadAdapterRun = new Runnable() {
+                @Override
+                public void run() {
+                    reloadAdapter(true);
+                }
+            };
+        }
+
+        return reloadAdapterRun;
     }
 
     public static SharedPreferences getPreferences(Context context) {
