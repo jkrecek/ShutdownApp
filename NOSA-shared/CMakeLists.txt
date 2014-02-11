@@ -1,4 +1,4 @@
-set(TARGET_NAME NOSA)
+set(TARGET_NAME libNOSA)
 
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src PARENT_SCOPE)
 
@@ -14,6 +14,9 @@ if(BUILD_PROJECT_STATIC)
 else()
     add_library(${TARGET_NAME} SHARED ${SRC_LIST})
 endif()
+
+set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "")
+set_target_properties(${TARGET_NAME} PROPERTIES IMPORT_PREFIX "")
 
 if(WIN32)
     set(LIBS ${LIBS} ws2_32)

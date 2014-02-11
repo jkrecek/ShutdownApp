@@ -39,7 +39,7 @@ else()
     set(LIBS ${LIBS} asound)
 endif()
 set(LIBS ${LIBS} libcurl)
-set(LIBS ${LIBS} NOSA)
+set(LIBS ${LIBS} libNOSA)
 
 target_link_libraries(${TARGET_NAME} ${LIBS})
 if(WIN32 AND BUILD_PROJECT_STATIC)

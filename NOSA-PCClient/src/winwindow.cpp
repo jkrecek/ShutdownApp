@@ -11,7 +11,7 @@
 
 const static char* appName = "NOSA-PCClient";
 const static char* serverExecutable = "NOSA-Server.exe";
-const static char* winName = "NOSA PC Client";
+const static char* winName = "NOSA";
 
 std::map<HWND, WinWindow* > WindowHolder::windowMap;
 
@@ -206,8 +206,13 @@ void WinWindow::doRun(bool asService)
 
     std::string runPath = getExecutablePath(asService);
     if (runPath != "")
+    {
         if (startProgram(runPath))
-            MessageBox(NULL, "Server successfully started.", "Success",  MB_ICONINFORMATION | MB_OK);
+        {
+            if (asService)
+                MessageBox(NULL, "Server successfully started.", "Success",  MB_ICONINFORMATION | MB_OK);
+        }
+    }
 }
 
 void WinWindow::doRunOnStart()

@@ -20,7 +20,7 @@ else()
     set(LIBS ${LIBS} pthread)
 endif()
 
-set(LIBS ${LIBS} NOSA)
+set(LIBS ${LIBS} libNOSA)
 
 target_link_libraries(${TARGET_NAME} ${LIBS})
 
