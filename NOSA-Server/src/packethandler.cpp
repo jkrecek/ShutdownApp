@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "helper.h"
+#include <sstream>
 #ifndef _WIN32
     #include <sys/socket.h>
     #include <netinet/in.h>
@@ -34,54 +35,6 @@ void PacketHandler::handle(SocketPacket *sopa)
     if (command < COMMAND_COUNT)
     {
         (*this.*commandHandlers[command])(sopa);
-    }
-}
-
-void PacketHandler::filterTorrents(std::vector<std::string> series, std::list<EpisodeTorrent> &torrents)
-{
-    StringVector::iterator it;
-    for (std::list<EpisodeTorrent>::iterator itr = torrents.begin(); itr != torrents.end(); )
-    {
-        const std::string& title = Helper::toLowerCase((*itr).getTitle());
-        if ((it = std::find(series.begin(), series.end(), title)) == series.end())
-        {
-            itr = torrents.erase(itr);
-            continue;
-        }
-
-        bool isBeingRemoved = false;
-        for (std::list<EpisodeTorrent>::iterator altItr = torrents.begin(); altItr != itr; ++altItr)
-        {
-            if (!(*itr).isSameEpisode(*altItr))
-                continue;
-
-            if ((*itr).getQuality() > (*altItr).getQuality())
-                torrents.erase(altItr);
-            else
-                itr = torrents.erase(itr);
-
-            isBeingRemoved = true;
-            break;
-        }
-
-        if (!isBeingRemoved)
-            ++itr;
-    }
-}
-
-void PacketHandler::runTorrents(const std::list<EpisodeTorrent> &torrents)
-{
-#ifdef _WIN32
-    std::string magnetAppPath = Helper::GetSZValueUnique( HKEY_CLASSES_ROOT, "Magnet\\shell\\open\\command\\", "");
-#else
-    // TODO
-    std::string magnetAppPath = "";
-#endif
-
-    for(std::list<EpisodeTorrent>::const_iterator itr = torrents.begin(); itr != torrents.end(); ++itr)
-    {
-        std::string command = "start " + Helper::replace(magnetAppPath, "%1", (*itr).getMagnet().c_str());
-        system(command.c_str());
     }
 }
 
@@ -152,29 +105,34 @@ void PacketHandler::CommandGetMac(SocketPacket* soPa)
 
 void PacketHandler::CommandTorrent(SocketPacket* soPa)
 {
-    std::vector<std::string> series = Helper::getArgsByQuotation(soPa->getParameters(), true);
     URLHandler handler;
     std::list<EpisodeTorrent> torrents;
 
+    StringVector seriesStrings = Helper::getArgsByQuotation(soPa->getParameters(), false);
+
     soPa->respond("Start downloading page", false);
 
-    std::string url_start = "http://thepiratebay.org/user/eztv/";
-    for (int i = 0; i < 5; ++i)
-    {
-        std::string url = url_start + Helper::to_string(i) + "/3";
-        std::string response = handler.loadUrl(url.c_str());
-        if (response.empty())
-            soPa->respond("Page return wrong http code", false);
-        else
+    int count = 0;
+    for(StringVector::iterator itr = seriesStrings.begin(); itr != seriesStrings.end(); ++itr) {
+        NVMap parameters = NVMap::fromMultiple(*itr, '|', '=');
+
+        std::stringstream ss;
+        ss << ++count << "/" << seriesStrings.size() << " ";
+
+        soPa->respond(ss.str() + "Finding torrents for TV show '" + parameters.getString("name") + "'", false);
+
+        std::string response = handler.loadUrl("http://kickass.to/usearch/$user%3Aeztv/?rss=1", parameters.getString("name").c_str());
+        if (!response.empty())
         {
-            soPa->respond("Page downloaded, parsing links now", false);
-            std::list<EpisodeTorrent> magnets = handler.getPirateBayMagnets(response);
-            torrents.insert(torrents.end(), magnets.begin(), magnets.end());
+            soPa->respond(ss.str() + "Filtering result for TV show '" + parameters.getString("name") + "'", false);
+            std::list<EpisodeTorrent> magnets = handler.getKickAssMagnets(response);
+            filterRequiredTorrents(&torrents, &magnets, parameters.getInt("s"), parameters.getInt("e"));
+            soPa->respond(ss.str() + "TV show successfully handled '" + parameters.getString("name") + "'", false);
+        }
+        else {
+            soPa->respond(ss.str() + "Page returned wrong HTTP code for TV show '" + parameters.getString("name") + "'", false);
         }
     }
-    soPa->respond("Parse complete", false);
-
-    filterTorrents(series, torrents);
 
     soPa->respond("Torrents filtered, running magnet links", false);
 
@@ -195,4 +153,51 @@ void PacketHandler::CommandSetVolume(SocketPacket* soPa)
     float value = atof(soPa->getParameters());
     sPCControl.setVolumeLevel(value);
     soPa->respond("OK");
+}
+
+int PacketHandler::filterRequiredTorrents(std::list<EpisodeTorrent> *destination, std::list<EpisodeTorrent> *source, int minSeason, int minEpisode)
+{
+    std::list<EpisodeTorrent> selected;
+    for (std::list<EpisodeTorrent>::iterator itr = source->begin(); itr != source->end(); ++itr)
+    {
+        EpisodeTorrent& episode = *itr;
+        if (episode.getSeason() < minSeason || episode.getEpisode() < minEpisode)
+            continue;
+
+        std::list<EpisodeTorrent>::iterator existingItr;
+        for (existingItr = selected.begin(); existingItr != selected.end(); ++existingItr)
+        {
+            if (episode.isSameEpisode(*existingItr))
+            {
+                if (episode.getQuality() > (*existingItr).getQuality())
+                {
+                    selected.erase(existingItr);
+                    selected.push_back(episode);
+                }
+
+                break;
+            }
+        }
+
+        if (existingItr == selected.end())
+            selected.push_back(episode);
+    }
+
+    destination->insert(destination->end(), selected.begin(), selected.end());
+}
+
+void PacketHandler::runTorrents(const std::list<EpisodeTorrent> &torrents)
+{
+#ifdef _WIN32
+    std::string magnetAppPath = Helper::GetSZValueUnique( HKEY_CLASSES_ROOT, "Magnet\\shell\\open\\command\\", "");
+#else
+    // TODO
+    std::string magnetAppPath = "";
+#endif
+
+    for(std::list<EpisodeTorrent>::const_iterator itr = torrents.begin(); itr != torrents.end(); ++itr)
+    {
+        std::string command = "start " + Helper::replace(magnetAppPath, "%1", (*itr).getMagnet().c_str());
+        system(command.c_str());
+    }
 }

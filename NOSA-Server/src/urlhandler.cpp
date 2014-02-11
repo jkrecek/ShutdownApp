@@ -17,7 +17,7 @@ size_t URLHandler::WriteCallback(void *contents, size_t size, size_t nmemb, void
     return size * nmemb;
 }
 
-std::string URLHandler::loadUrl(const char* url)
+std::string URLHandler::loadUrl(const char* url, const char* parameter)
 {
     CURL *curl;
     CURLcode res;
@@ -27,6 +27,14 @@ std::string URLHandler::loadUrl(const char* url)
     curl = curl_easy_init();
     if (curl)
     {
+        if (parameter)
+        {
+            char* escapedParameter = curl_easy_escape(curl, parameter, strlen(parameter));
+            std::string newString = Helper::replace(url, "$", escapedParameter);
+            url = strdup(newString.c_str());
+            curl_free(escapedParameter);
+        }
+
         curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
@@ -126,9 +134,67 @@ std::list<EpisodeTorrent> URLHandler::getPirateBayMagnets(std::string response)
     return magnets;
 }
 
+std::list<EpisodeTorrent> URLHandler::getKickAssMagnets(std::string response)
+{
+    std::list<EpisodeTorrent> magnets;
+
+    std::size_t itemStart = 0;
+    std::size_t itemEnd = 0;
+
+    while ((itemStart = response.find("<item>", itemStart+1)) != std::string::npos)
+    {
+        itemEnd = response.find("</item", itemStart);
+        std::string item = response.substr(itemStart, itemEnd - itemStart);
+
+        std::string name = Helper::getTagContent(item, "title");
+
+        std::string magnet = Helper::getTagContent(item, "torrent:magnetURI");
+        std::size_t magnetStart = magnet.find("magnet:");
+        std::size_t magnetEnd = magnet.find(']');
+        magnet = magnet.substr(magnetStart, magnetEnd - magnetStart);
+
+        EpisodeTorrent episodeItem(name, magnet);
+        if (episodeItem.isValid())
+            magnets.push_back(episodeItem);
+    }
+
+    return magnets;
+
+    /*std::size_t itemEnd = itemStart;
+    tableEnd = response.rfind("<tr>", tableEnd);
+    std::string table = response.substr(tableStart, tableEnd - tableStart);
+
+    std::size_t tr_start, tr_end, extract_start, extract_end;
+    tr_start = tr_end = 0;
+    std::string line, name, magnet;
+    std::string link_start = "<a href=\"";
+    std::string link_start_magnet = link_start + "magnet:";
+
+    while ((tr_start = table.find("<tr>", tr_end)) != std::string::npos)
+    {
+        tr_end = table.find("</tr>", tr_start);
+        line = table.substr(tr_start, tr_end - tr_start);
+
+        extract_start = line.find(link_start + "/torrent");   // element start
+        extract_start = line.find(">", extract_start) + 1;
+        extract_end = line.find("</a>", extract_start);
+        name = line.substr(extract_start, extract_end - extract_start);
+
+        extract_start = line.find(link_start_magnet) + link_start.length();
+        extract_end = line.find('"', extract_start);
+        magnet = line.substr(extract_start, extract_end - extract_start);
+
+        EpisodeTorrent item(name, magnet);
+        if (item.isValid())
+            magnets.push_back(item);
+    }
+
+    return magnets;*/
+}
+
 
 EpisodeTorrent::EpisodeTorrent(std::string name, std::string _magnet)
-    : season(-1), episode(-1), magnet(_magnet), validity(false)
+    : full_name(name), season(-1), episode(-1), magnet(_magnet), validity(false)
 {
     std::string _name = name;
     std::replace(_name.begin(), _name.end(), '.', ' ');
@@ -189,7 +255,7 @@ EpisodeTorrent::EpisodeTorrent(std::string name, std::string _magnet)
 
 bool EpisodeTorrent::isSameEpisode(const EpisodeTorrent &episodeTorrent)
 {
-    return Helper::iequals(title, episodeTorrent.title) &&
+    return /*Helper::iequals(title, episodeTorrent.title) &&*/
             episode == episodeTorrent.episode &&
             season == episodeTorrent.season;
 }

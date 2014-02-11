@@ -27,8 +27,10 @@ public:
     Quality getQuality();
     bool isSameEpisode(const EpisodeTorrent& episodeTorrent);
     std::string to_string();
+    const std::string& getFullName() const { return full_name ; }
 
 private:
+    const std::string full_name;
     bool validity;
     std::string title;
     std::vector<std::string> version;
@@ -43,10 +45,11 @@ public:
     URLHandler();
 
     static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
-    std::string loadUrl(const char* url);
+    std::string loadUrl(const char* url, const char* parameter = NULL);
 
     std::list<EpisodeTorrent> getEztvMagnets(std::string response);
     std::list<EpisodeTorrent> getPirateBayMagnets(std::string response);
+    std::list<EpisodeTorrent> getKickAssMagnets(std::string response);
 };
 
 #endif // URLHANDLER_H

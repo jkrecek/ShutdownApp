@@ -195,16 +195,29 @@ char* Helper::ipv6_string(in6_addr& addr)
 StringVector Helper::getArgsByQuotation(std::string arg, bool lower = false)
 {
     StringVector v;
+    std::string content;
     for (std::size_t st = 0, en = 0; (st = arg.find('"', st)) != std::string::npos; st = en + 1)
     {
         en = arg.find('"', ++st);
+        content = arg.substr(st, en - st);
         if (lower)
-            v.push_back(Helper::toLowerCase(arg.substr(st, en - st)));
-        else
-            v.push_back(arg.substr(st, en - st-1));
+            content = Helper::toLowerCase(content);
+
+        v.push_back(content);
     }
 
     return v;
+}
+
+std::string Helper::getTagContent(std::string text, std::string tag, std::size_t start)
+{
+    std::size_t posStart = text.find("<" + tag + ">", start);
+    if (posStart == std::string::npos)
+        return std::string();
+
+    posStart += tag.size() + 2;
+    std::size_t posEnd = text.find("</" + tag.substr(0, tag.find(" ")), posStart);
+    return text.substr(posStart, posEnd - posStart);
 }
 
 #ifdef _WIN32

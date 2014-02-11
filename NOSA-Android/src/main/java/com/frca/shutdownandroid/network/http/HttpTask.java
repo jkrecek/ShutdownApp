@@ -15,6 +15,7 @@ import android.widget.EditText;
 
 import com.frca.shutdownandroid.MainActivity;
 import com.frca.shutdownandroid.R;
+import com.frca.shutdownandroid.classes.NVMap;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -41,7 +42,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HttpTask extends AsyncTask<Void, Void, List<String>> {
+public class HttpTask extends AsyncTask<Void, Void, List<NVMap>> {
 
     public final static String USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.101 Safari/537.36";
 
@@ -70,7 +71,7 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
     }
 
     @Override
-    protected List<String> doInBackground(Void... voids) {
+    protected List<NVMap> doInBackground(Void... voids) {
         try {
             setCredentialCookies();
 
@@ -138,11 +139,11 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
         return doc.body().select("div#disc-big-main-topic > *");
     }
 
-    private List<String> parseShows(Elements elements) {
+    private List<NVMap> parseShows(Elements elements) {
         if (elements == null)
             return null;
 
-        List<String> series = new ArrayList<String>();
+        List<NVMap> series = new ArrayList<NVMap>();
         for (Element element : elements) {
             if (element.hasClass("cleaner"))
                 break;
@@ -150,9 +151,14 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
             if (element.hasClass("watchlist")) {
                 Element info = element.select("li.watchinfo span:first-of-type span").first();
                 if (info.hasClass("past") || info.text().equals("dnes")) {
+                    NVMap map = new NVMap();
                     String name = element.select("li.watchname > a").text();
-                    name = name.replaceAll("(.*), The", "The $1");
-                    series.add(name);
+                    String seasonEpisode = element.select("li.epnr").text();
+                    int idx = seasonEpisode.indexOf("x");
+                    map.insertValue("name", name.replaceAll("(.*), The", "The $1"));
+                    map.insertValue("s", seasonEpisode.substring(0, idx));
+                    map.insertValue("e", seasonEpisode.substring(idx +1, seasonEpisode.length()));
+                    series.add(map);
                 }
             }
         }
@@ -161,11 +167,11 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
     }
 
     @Override
-    protected void onPostExecute(List<String> strings) {
-        if (strings == null)
+    protected void onPostExecute(List<NVMap> shows) {
+        if (shows == null)
             Log.i(getClass().getSimpleName(), "Strings are null");
 
-        callback.call(strings);
+        callback.call(shows);
     }
 
     private HttpGet getGet(String url) {
@@ -313,6 +319,6 @@ public class HttpTask extends AsyncTask<Void, Void, List<String>> {
     }
 
     public interface OnHandled {
-        public void call(List<String> list);
+        public void call(List<NVMap> list);
     }
 }

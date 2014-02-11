@@ -9,6 +9,7 @@ public:
     SocketPacket(NetworkSocket* socket, Packet* packet);
 
     void respond(const char* text, bool close = true);
+    void respond(std::string text, bool close = true);
 
     NetworkSocket* getSocket() const { return m_socket; }
     Packet* getPacket() const { return m_packet; }

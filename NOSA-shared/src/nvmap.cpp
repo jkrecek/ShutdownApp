@@ -6,13 +6,20 @@
 
 #define STR_INVALID "_INVALID_"
 
-NVMap::NVMap()
+NVMap NVMap::fromMultiple(std::string multiple, char parameterSeparator, char nameValueSeparator)
 {
+    NVMap map;
+    map.appendPairs(Helper::split(multiple, parameterSeparator), nameValueSeparator);
+    return map;
 }
 
 void NVMap::insertValue(std::string key, std::string value)
 {
-    insert(std::pair<std::string, std::string> (key, value));
+    NVMap::iterator itr = find(key);
+    if (itr != end())
+        itr->second = value;
+    else
+        insert(std::pair<std::string, std::string> (key, value));
 }
 
 void NVMap::insertValue(std::string key, float value)
@@ -50,7 +57,6 @@ void NVMap::appendPairs(StringVector vector, char delim)
     for(StringVector::iterator itr = vector.begin(); itr != vector.end(); ++itr)
         insertPair(*itr, delim);
 }
-
 
 bool NVMap::contains(std::string key)
 {

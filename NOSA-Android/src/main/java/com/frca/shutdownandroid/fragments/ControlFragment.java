@@ -2,9 +2,12 @@ package com.frca.shutdownandroid.fragments;
 
 import android.app.AlertDialog;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +28,7 @@ import com.frca.shutdownandroid.adapters.ControlGridAdapter;
 import com.frca.shutdownandroid.classes.Connection;
 import com.frca.shutdownandroid.classes.ControlAction;
 import com.frca.shutdownandroid.classes.DirectConnection;
+import com.frca.shutdownandroid.classes.NVMap;
 import com.frca.shutdownandroid.classes.ProxyConnection;
 import com.frca.shutdownandroid.network.NetworkThread;
 import com.frca.shutdownandroid.network.http.HttpTask;
@@ -181,30 +185,49 @@ public class ControlFragment extends BaseFragment implements AdapterView.OnItemC
     public static ControlAction.OnActionClick torrentControlClick = new ControlAction.OnActionClick() {
         @Override
         public void call(final MainFragment fragment, final ControlAction action, final NetworkThread thread) {
+            final ProgressDialog dialog = new ProgressDialog(fragment.getActivity());
+            dialog.setCancelable(false);
+            dialog.setMessage("Fetching requested TV shows ...");
+            dialog.show();
+
             new HttpTask(fragment.getActivity(), "http://www.serialzone.cz/watchlist/", new HttpTask.OnHandled() {
                 @Override
-                public void call(List<String> list) {
+                public void call(List<NVMap> list) {
                     if (list == null)
                         return;
 
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(fragment.getActivity());
-                    builder.setTitle("Data").setPositiveButton(android.R.string.ok, MainActivity.dismissListener);
-
-                    final AlertDialog dialog = builder.create();
-                    //currentMessage = "";
+                    dialog.setMessage("Connecting to server ...");
 
                     StringBuilder sb = new StringBuilder();
                     sb.append("TORRENT ");
-                    for (String ser : list) {
-                        ser = ser.replaceAll("\\.", " ");
-                        ser = ser.replaceAll("-", " ");
-                        sb.append("\"" + ser + "\", ");
+                    for (NVMap series : list) {
+                        String name = series.getString("name", null);
+                        name = name.replaceAll("\\.", " ");
+                        name = name.replaceAll("-", " ");
+                        series.insertValue("name", name);
+                        sb.append("\"" + series.toString('|') + "\", ");
                     }
 
                     thread.sendMessage(sb.toString(), new NetworkThread.OnMessageReceived() {
                         @Override
-                        public void messageReceived(String message) {
-                            // TODO
+                        public void messageReceived(final String message) {
+                            Helper.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    dialog.setMessage(message);
+
+                                    if (message.equals("Done"))
+                                    {
+                                        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                dialog.cancel();
+                                            }
+                                        }, 5000);
+                                    }
+                                }
+                            });
+
                         }
                     });
                 }

@@ -36,6 +36,7 @@ public:
     static std::string getPathToFile(const char* fileName, bool extraBackslash = false);
     static char* ipv6_string(in6_addr& addr);
     static StringVector getArgsByQuotation(std::string arg, bool lower);
+    static std::string getTagContent(std::string text, std::string tag, std::size_t start = 0);
 
 #ifdef _WIN32
     static std::string GetSZValueUnique( HKEY openKey, const char* regkey, const char* keyName );

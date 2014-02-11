@@ -8,8 +8,8 @@
 class NVMap : public std::map<std::string, std::string>
 {
 public:
-    NVMap();
-
+    NVMap() { }
+    static NVMap fromMultiple(std::string multiple, char parameterSeparator, char nameValueSeparator);
     void appendPairs(StringVector vector, char delim);
     void insertPair(std::string nameValue, char delim);
     void insertValue(std::string key, std::string value);

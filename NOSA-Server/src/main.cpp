@@ -16,6 +16,8 @@ int main()
             result = core.run();
             core.cleanSockets();
         }
+        if (true)
+        {}
         ON_NO_SOCKET
         {
             std::cout << "Next connection attempt will be in " << RETRY_DELAY << " seconds" << std::endl;

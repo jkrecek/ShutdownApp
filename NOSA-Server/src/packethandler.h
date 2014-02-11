@@ -26,9 +26,8 @@ public:
     void CommandSetVolume(SocketPacket* soPa);
 
 private:
-    std::list<EpisodeTorrent> getTorrentMagnets(Packet* packet);
-    void filterTorrents(std::vector<std::string> series, std::list<EpisodeTorrent>& torrents);
     void runTorrents(const std::list<EpisodeTorrent>& torrents);
+    int filterRequiredTorrents(std::list<EpisodeTorrent>* destination, std::list<EpisodeTorrent>* source, int minSeason, int minEpisode);
 };
 
 #endif // PACKETHANDLER_H
