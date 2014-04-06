@@ -4,6 +4,7 @@
 #include "helper.h"
 #include "defines.h"
 #include "sha512.h"
+#include <sstream>
 
 #ifdef __WIN32
     #include "../res/resources.h"
@@ -324,13 +325,14 @@ int WinWindow::processCount(const char *executable)
     return count;
 }
 
-void WinWindow::terminateProcesses(const char *executable)
+uint WinWindow::terminateProcesses(const char *executable)
 {
     PROCESSENTRY32 entry;
     entry.dwSize = sizeof(PROCESSENTRY32);
 
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
+    uint counter = 0;
     if (Process32First(snapshot, &entry))
     {
         HANDLE hProcess;
@@ -340,19 +342,27 @@ void WinWindow::terminateProcesses(const char *executable)
             {
                 hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, entry.th32ProcessID);
                 TerminateProcess(hProcess, 1);
+                ++counter;
                 CloseHandle(hProcess);
             }
         }
     }
 
     CloseHandle(snapshot);
+    return counter;
 }
 
 void WinWindow::doTerminateAll()
 {
-    terminateProcesses(serverExecutable);
+    uint count = terminateProcesses(serverExecutable);
 
-    MessageBox(NULL, "All NOSA servers are beeing terminated.", "Done!", MB_ICONINFORMATION | MB_OK);
+    if (!count)
+        MessageBox(NULL, "No running servers found.", "No action!", MB_ICONERROR | MB_OK);
+    else {
+        std::ostringstream ss;
+        ss << "Found " << count << " active NOSA Servers. All were terminated.";
+        MessageBox(NULL, ss.str().c_str(), "Done!", MB_ICONINFORMATION | MB_OK);
+    }
 }
 
 const char* WinWindow::checkValues()

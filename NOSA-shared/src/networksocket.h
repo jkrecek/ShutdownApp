@@ -34,7 +34,7 @@ public:
     ~NetworkSocket();
 
     Packet readPacket();
-    NVMap parsePacket(std::string line);
+    static NVMap parsePacket(std::string line);
 
     void close();
 

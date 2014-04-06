@@ -4,6 +4,8 @@
 #include "networksocket.h"
 #include "packet.h"
 
+#include "socketpacket.h"
+
 enum ConnectionType
 {
     TYPE_ANDROID = 0,
@@ -16,7 +18,7 @@ class BaseConnection
 public:
     ~BaseConnection();
 
-    static BaseConnection* estabilishConnection(NetworkSocket* _socket);
+    static BaseConnection* estabilishConnection(SocketPacket* soPa);
 
     ConnectionType getType() const { return type; }
     std::string getUser() const { return user; }

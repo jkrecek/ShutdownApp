@@ -18,11 +18,9 @@ BaseConnection::~BaseConnection()
     delete socket;
 }
 
-BaseConnection* BaseConnection::estabilishConnection(NetworkSocket *socket)
+BaseConnection* BaseConnection::estabilishConnection(SocketPacket* soPa)
 {
-    Packet packet = socket->readPacket();
-
-    NVMap parameters = socket->parsePacket(packet.getMessage());
+    NVMap parameters = NetworkSocket::parsePacket(soPa->getPacket()->getMessage());
     if (!parameters.contains("type") ||
         !parameters.contains("user") ||
         !parameters.contains("pass"))
@@ -34,17 +32,16 @@ BaseConnection* BaseConnection::estabilishConnection(NetworkSocket *socket)
     std::string user = parameters.get("user");
     std::string pass = parameters.get("pass");
     if (Helper::iequals(parameters.get("type"), "ANDROID"))
-        return new AndroidConnection(socket, user, pass);
+        return new AndroidConnection(soPa->getSocket(), user, pass);
     else if (Helper::iequals(parameters.get("type"), "PC")) {
-        PCConnection * existing = sConnections.getPCConnection(user, pass);
-        if (!existing)
-            return new PCConnection(socket, user, pass);
-        else
+        bool exists = sConnections.getPCConnection(user, pass);
+        if (exists)
         {
             std::cout << "Connection already exists" << std::endl;
-            socket->sendResponse(&packet, "ALREADY_EXISTS");
+            soPa->respond("ALREADY_EXISTS", false);
             return NULL;
-        }
+        } else
+            return new PCConnection(soPa->getSocket(), user, pass);
     }
     else
         return NULL;

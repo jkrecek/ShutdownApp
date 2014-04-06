@@ -35,9 +35,11 @@ int RemoteCore::run()
     while (server && server->isOpen())
     {
         NetworkSocket* socket = server->acceptConnection();
+        Packet firstPacket = socket->readPacket();
+        SocketPacket soPa(socket, &firstPacket);
         try
         {
-            connection = BaseConnection::estabilishConnection(socket);
+            connection = BaseConnection::estabilishConnection(&soPa);
         }
         catch (SocketClosedException& /*e*/)
         {
@@ -53,6 +55,10 @@ int RemoteCore::run()
         {
             delete socket;
             continue;
+        }
+        else
+        {
+            soPa.respond("CONNECTED");
         }
 
         sConnections.insert(connection);

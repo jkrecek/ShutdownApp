@@ -17,13 +17,17 @@ public:
 
     int run();
 
-    bool socketCreated() { return socket; }
+    State initialize();
+
+
+    State getState() const { return m_state; }
 
 private:
-    bool initialized;
     MainSocket* socket;
     PacketHandler handler;
     Configuration* configuration;
+
+    State m_state;
 };
 
 #endif // CORE_H

@@ -18,7 +18,6 @@ public:
     const char* getParameters();
 
     Packet responsePacket(const char* message);
-    void respond(const char* message);
     const char* escape(const char* message);
 private:
     Command m_command;

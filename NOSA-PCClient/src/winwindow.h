@@ -57,7 +57,7 @@ private:
     bool startProgram(std::string executable);
 
     int processCount(const char* executable);
-    void terminateProcesses(const char* executable);
+    uint terminateProcesses(const char* executable);
 
     Configuration* m_config;
     HGDIOBJ m_defaultFont;

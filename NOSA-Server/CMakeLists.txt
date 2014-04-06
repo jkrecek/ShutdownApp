@@ -3,6 +3,9 @@ set(TARGET_NAME NOSA-Server)
 set(BUILD_CURL_EXE false)
 set(BUILD_CURL_TESTS false)
 
+add_definitions(-DMODULE_NO_LOOP)
+add_definitions(-DSERVER_APP_NAME="${TARGET_NAME}")
+
 if(WIN32)
     set(CURL_STATICLIB BUILD_CURL_STATIC)
     if(BUILD_CURL_STATIC)
@@ -10,6 +13,7 @@ if(WIN32)
     else(BUILD_CURL_STATIC)
         remove_definitions(-DCURL_STATICLIB)
     endif(BUILD_CURL_STATIC)
+    set(BINARY_PARAMETER WIN32)
 endif(WIN32)
 
 add_subdirectory(dep/curl)
@@ -23,7 +27,7 @@ else()
 endif()
 
 aux_source_directory(src SRC_LIST)
-add_executable(${TARGET_NAME} ${SRC_LIST})
+add_executable(${TARGET_NAME} ${BINARY_PARAMETER} ${SRC_LIST})
 
 find_path(LIBCURL_INCLUDE_DIR curl/curl.h HINTS ${LIBCURL_DIR}/include)
 set(INCLUDE_DIR ${INCLUDE_DIR} ${LIBCURL_INCLUDE_DIR})
